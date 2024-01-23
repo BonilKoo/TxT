@@ -1,8 +1,8 @@
-# Ditto
-Ditto: deep multi-task learning with modeling gene interaction using transformer for predicting clinical features and survival
+# Transcriptome Transformer (TxT)
+Transcriptome Transformer: multi-task learning with modeling gene interaction using transformer for predicting clinical features and survival
 
 <p align="center">
-	<img src="./img/Ditto.svg" />
+	<img src="./img/TxT.svg" />
 </p>
 
 ## Installation
@@ -42,7 +42,7 @@ You can use other methods according to your need.
 
 #### Input data
 
-*network*
+*Network*
 
 * File type: CSV
 * Format overview:
@@ -72,7 +72,7 @@ python embed_gene.py --network_file <network.csv> --result_dir <result_dir>
 - `--sparse`: An option to control the memory efficiency of storing random walks.
 - `--device`: (int) Device number.
 
-Check the [script](https://github.com/BonilKoo/Ditto/blob/main/src/embed_gene.py#L19) for other options.
+Check the [script](https://github.com/BonilKoo/TxT/blob/main/src/embed_gene.py#L19) for other options.
 
 *Output*
 
