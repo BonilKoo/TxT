@@ -1,9 +1,9 @@
 # Transcriptome Transformer (TxT)
 Transcriptome Transformer: multi-task learning with modeling gene interaction using transformer for predicting clinical features and survival
 
-<p align="center">
+<!---<p align="center">
 	<img src="./img/TxT.svg" />
-</p>
+</p>--->
 
 ## Installation
 
