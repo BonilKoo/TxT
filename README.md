@@ -217,5 +217,5 @@ Chek the [script]() for other options.
 
 *Outputs*
 
-- `log.txt`: Within this file, you'll find a record encompassing training loss, validation loss, and performance metrics for each training, validation, and test set.
+- `log.txt`: A file encompassing record of training loss, validation loss, and performance metrics for each training, validation, and test set.
 - `model.pt`: A file for the trained model's learned parameters.
