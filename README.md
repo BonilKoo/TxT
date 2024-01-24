@@ -10,14 +10,14 @@ The code has been tested in the following environment:
 
 | Package           | Version   |
 |-------------------|-----------|
-| Python            | 3.9.7     |
-| Pytorch           | 1.12.1    |
+| Python            | 3.10.4    |
+| Pytorch           | 1.11.0    |
 | CUDA              | 11.3      |
 | numpy             | 1.21.2    |
-| pandas            | 1.4.0     |
+| pandas            | 1.4.2     |
 | scikit-learn      | 1.1.2     |
 | scikit-survival   | 0.18.0    |
-| scipy             | 1.7.3     |
+| scipy             | 1.8.0     |
 
 You can chage the package version according to your need.
 
