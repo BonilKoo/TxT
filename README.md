@@ -55,7 +55,7 @@ You can use other methods according to your need.
 ### 2) Training
 
 ```
-python embed_gene.py --network_file <network.csv> --result_dir <result_dir>
+python src/embed_gene.py --network_file <network.csv> --result_dir <result_dir>
     --embedding_dim <embedding_dim> --sparse --device <device>
 ```
 
@@ -171,7 +171,7 @@ Only for multi-task learning
 * Regression
 
     ```
-    python run_regression.py --input_file <omics_profile.csv> --output_file <clinical_feature.tsv>
+    python src/run_regression.py --input_file <omics_profile.csv> --output_file <clinical_feature.tsv>
     --embed_file <gene_embedding.csv> --result_dir <resuir_dir> --scaler [MinMax/Standard/None]
     --device <device> --xavier_uniform --norm_first
     ```
@@ -179,7 +179,7 @@ Only for multi-task learning
 * Classification
 
     ```
-    python run_classification.py --input_file <omics_profile.csv> --output_file <clinical_feature.tsv>
+    python src/run_classification.py --input_file <omics_profile.csv> --output_file <clinical_feature.tsv>
     --embed_file <gene_embedding.csv> --result_dir <result_dir> --scaler [MinMax/Standard/None]
     --device <device> --xavier_uniform --norm_first
     ```
@@ -187,7 +187,7 @@ Only for multi-task learning
 * Survival
 
     ```
-    python run_survival.py --input_file <omics_profile.csv> --output_file <clinical_feature.tsv>
+    python src/run_survival.py --input_file <omics_profile.csv> --output_file <clinical_feature.tsv>
     --embed_file <gene_embedding.csv> --result_dir <result_dir> --scaler [MinMax/Standard/None]
     --device <device> --xavier_uniform --norm_first
     ```
@@ -195,7 +195,7 @@ Only for multi-task learning
 * Multi-task
 
     ```
-    python run_multi_task.py --input_file <omics_profile.csv> --output_file <clinical_feature.tsv>
+    python src/run_multi_task.py --input_file <omics_profile.csv> --output_file <clinical_feature.tsv>
     --embed_file <gene_embedding.csv> --result_dir <result_dir> --scaler [MinMax/Standard/None]
     --device <device> --xavier_uniform --norm_first
     --task_file <task_list.tsv>
