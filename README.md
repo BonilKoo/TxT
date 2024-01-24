@@ -1,5 +1,5 @@
 # Transcriptome Transformer (TxT)
-Transcriptome Transformer: multi-task learning with modeling gene interaction using transformer for predicting clinical features and survival
+Transcriptome Transformer: prediction of clinical features from transcriptome using transformer via multi-task learning with modeling gene interactions
 
 ## Installation
 
@@ -36,9 +36,9 @@ The embedding for each gene, used as input for training, is derived from a pre-t
 
 You can use other methods according to your need.
 
-#### Input data
+#### 1) Input data
 
-*Network*
+(1) *Network*
 
 * File type: CSV
 * Format overview:
@@ -52,17 +52,16 @@ You can use other methods according to your need.
     ...
     ```
 
-#### Training
+#### 2) Training
 
 ```
 python embed_gene.py --network_file <network.csv> --result_dir <result_dir>
-    --embedding_dim <embedding_dim> --sparse
-    --device <device>
+    --embedding_dim <embedding_dim> --sparse --device <device>
 ```
 
 *Options*
 
-- `--network_File`: (csv) A network file representing relationships between genes.
+- `--network_file`: (csv) A network file representing relationships between genes.
 - `--result_dir`: (dir) A directory to save output files.
 - `--embedding_dim`: (int) The size of each embedding vector.
 - `--sparse`: An option to control the memory efficiency of storing random walks.
@@ -76,9 +75,9 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/src/embed_gene.py#L
 
 ### 2. Training and Evaluation
 
-#### Input data
+#### 1) Input data
 
-*Omics profile*
+(1) *Omics profile*
 
 * File type: CSV
 * Format overview:
@@ -91,7 +90,7 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/src/embed_gene.py#L
     ...
     ```
 
-*Clinical features*
+(2) *Clinical features*
 
 * File type: TSV
 * Format overview:
@@ -136,7 +135,22 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/src/embed_gene.py#L
         ...
         ```
 
-*Task list*
+(3) *gene embedding*
+
+* File type: CSV
+* Format overview:
+
+    ```
+    Gene,0,1,2,...
+    CHEK2,-0.776163,-0.510058,-0.566633,...
+    FOXA1,-0.133213,-0.649964,-0.390464,...
+    GATA3,-0.459504,-0.668453,-0.255762,...
+    ...
+    ```
+
+(4) *Task list*
+
+Only for multi-task learning
 
 * File type: TSV
 * Format overview:
@@ -152,18 +166,56 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/src/embed_gene.py#L
         OS_event    survival_event
         ```
 
-*gene embedding*
+#### 2) Training
 
-* File type: CSV
-* Format overview:
+* Regression
 
     ```
-    Gene,0,1,2,...
-    CHEK2,-0.776163,-0.510058,-0.566633,...
-    FOXA1,-0.133213,-0.649964,-0.390464,...
-    GATA3,-0.459504,-0.668453,-0.255762,...
-    ...
+    python run_regression.py --input_file <omics_profile.csv> --output_file <clinical_feature.tsv>
+    --embed_file <gene_embedding.csv> --result_dir <resuir_dir> --scaler [MinMax/Standard/None]
+    --device <device> --xavier_uniform --norm_first
     ```
 
-#### Training
+* Classification
 
+    ```
+    python run_classification.py --input_file <omics_profile.csv> --output_file <clinical_feature.tsv>
+    --embed_file <gene_embedding.csv> --result_dir <result_dir> --scaler [MinMax/Standard/None]
+    --device <device> --xavier_uniform --norm_first
+    ```
+
+* Survival
+
+    ```
+    python run_survival.py --input_file <omics_profile.csv> --output_file <clinical_feature.tsv>
+    --embed_file <gene_embedding.csv> --result_dir <result_dir> --scaler [MinMax/Standard/None]
+    --device <device> --xavier_uniform --norm_first
+    ```
+
+* Multi-task
+
+    ```
+    python run_multi_task.py --input_file <omics_profile.csv> --output_file <clinical_feature.tsv>
+    --embed_file <gene_embedding.csv> --result_dir <result_dir> --scaler [MinMax/Standard/None]
+    --device <device> --xavier_uniform --norm_first
+    --task_file <task_list.tsv>
+    ```
+
+*Options*
+
+- `--input_file`: (csv) A omics profile file representing a gene expression dataset where each row corresponds to a sample, and each column, labeled with gene names, represents the expression level of the corresponding gene in the respective sample. The numerical values in the matrix indicate the expression levels of each gene in the corresponding samples.
+- `--output_file`: (tsv) A file containing clinical feature data. The format is organized with a header line indicating the type of data and subsequent rows containing sample-specific information.
+- `--embed_file`: (csv) A csv file representing gene embedding. The gene names are listed in the first column, and the subsequent columns contain the embedding values for each gene in different dimensions.
+- `--result_dir`: (dir) A directory to save output files.
+- `--scaler`: (str) A data normalization method. You can choose among [MinMax/Standard/None]. The gene expression levels were normalized by using the expression values of the traning set.
+- `--device`: (int) Device number.
+- `--xavier_uniform`: An option to use Xavier Uniform initialization for model weights to prevent issues like vanishing or exploding gradients during the training process.
+- `--norm_first`: An option to perform LayerNorms before other attention and feedforward operations, otherwise after.
+- `--task_file`: (tsv) Only for multi-task learning. A tsv file that outlines a set of tasks. Each row in the file represents a specific task, and the information is organized into two columns: "task name" and "prediction type".
+
+Chek the [script]() for other options.
+
+*Outputs*
+
+- `log.txt`: Within this file, you'll find a record encompassing training loss, validation loss, and performance metrics for each training, validation, and test set.
+- `model.pt`: A file for the trained model's learned parameters.
