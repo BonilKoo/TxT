@@ -1,18 +1,18 @@
 name: TxT
 channels:
-  - pytorch
+  - pyg
   - defaults
   - conda-forge
 dependencies:
-  - pip=21.2.4=py39h06a4308_0
-  - python=3.9.7=hf930737_3_cpython
-  - pytorch=1.12.1=py3.9_cuda11.3_cudnn8.3.2_0
+  - pip=23.3.1=py310h06a4308_0
+  - pyg=2.4.0=py310_torch_1.12.0_cu116
+  - python=3.10.13=h955ad1f_0
+  - pytorch=1.12.1=cuda112py310he33e0d6_201
+  - pytorch_cluster=1.6.0=py310h6ec7b7f_0
   - pip:
       - networkx==2.8.6
       - numpy==1.21.2
-      - pandas==1.4.0
-      - pyg-lib==0.3.1+pt112cu113
-      - scikit-learn==1.1.2
-      - scikit-survival==0.18.0
-      - scipy==1.7.3
-      - torch-geometric==2.4.0
+      - pandas==1.4.2
+      - scikit-learn==1.2.2
+      - scikit-survival==0.20.0
+      - scipy==1.10.1

@@ -8,16 +8,19 @@ Transcriptome Transformer: prediction of clinical features from transcriptome us
 The code has been tested in the following environment:
 
 
-| Package           | Version   |
-|-------------------|-----------|
-| Python            | 3.10.4    |
-| Pytorch           | 1.11.0    |
-| CUDA              | 11.3      |
-| numpy             | 1.21.2    |
-| pandas            | 1.4.2     |
-| scikit-learn      | 1.1.2     |
-| scikit-survival   | 0.18.0    |
-| scipy             | 1.8.0     |
+| Package           | Version |
+|-------------------|---------|
+| Python            | 3.10.13 |
+| PyTorch           | 1.12.1  |
+| PyTorch Geometric | 2.4.0   |
+| PyTorch Cluster   | 1.6.0   |
+| CUDA              | 11.6    |
+| networkx          | 2.8.6   |
+| numpy             | 1.21.2  |
+| pandas            | 1.4.2   |
+| scikit-learn      | 1.2.2   |
+| scikit-survival   | 0.20.0  |
+| scipy             | 1.10.1  |
 
 You can chage the package version according to your need.
 
