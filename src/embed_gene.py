@@ -1,20 +1,15 @@
 import argparse
 import joblib
-import os
-import random
-
-import networkx as nx
-import numpy as np
-import pandas as pd
 
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_auc_score
 
 import torch
 
-from torch_geometric.utils.convert import from_networkx
-from torch_geometric.transforms import RandomLinkSplit
 from torch_geometric.nn import Node2Vec
+
+from evaluation import eval_result_node2vec
+from datasets import load_network
+from utils import *
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -41,127 +36,6 @@ def parse_args():
     parser.add_argument('--sparse', action='store_true')
     
     return parser.parse_args()
-
-def mkdir(dir_name):
-    os.makedirs(dir_name, exit_ok=True)
-
-def rmfile(file_name):
-    if os.path.exists(file_name):
-        os.system(f'rm -f {file_name}')
-
-def save_args(args):
-    mkdir(args.result_dir)
-    args_df = pd.DataFrame(vars(args), index=['value'])
-    args_df.columns.name = 'argument'
-    args_df.T.to_csv(f'{args.result_dir}/arguments.tsv', sep='\t')
-
-def set_seed(seed):
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministric = True
-    torch.backends.cudnn.benchmark = False
-
-def load_network(network_file, val_ratio, test_ratio):
-    network_df = pd.read_csv(network_file)
-    print(f'\nNetwork file {network_file} is loaded.')
-    
-    network_nx = nx.from_pandas_edgelist(network_df, source=network_df.columns[0], target=network_df.columns[1])
-    print(f'\n# of nodes = {len(network_nx)}')
-    print(f'# of edges = {len(network_nx.edges())}\n')
-    gene_list = network_nx.nodes()
-    
-    network_PyG = from_networkx(network_nx)
-    
-    random_link_split = RandomLinkSplit(num_val=val_ratio, num_test=test_ratio, is_undirected=True)
-    network_PyG = random_link_split(network_PyG)
-    train_data = network_PyG[0]
-    val_data = network_PyG[1]
-    test_data = network_PyG[2]
-    
-    return gene_list, train_data, val_data, test_data
-
-class EarlyStopping:
-    """
-    Code based on: https://github.com/Bjarten/early-stopping-pytorch/blob/master/pytorchtools.py
-    Early stops the training if validation accuracy doesn't improve after a given patience.
-    """
-    def __init__(self, patience=7, verbose=False, delta=0, path_model=None, path_clf=None, trace_func=print):
-        """
-        Args:
-            patience (int): How long to wait after last time validation loss improved.
-                            Default: 7
-            verbose (bool): If True, prints a message for each validation loss improvement. 
-                            Default: False
-            delta (float): Minimum change in the monitored quantity to qualify as an improvement.
-                            Default: 0
-            path (str or None): Path for the checkpoint to be saved to.
-                            Default: 'checkpoint.pt'
-            trace_func (function): trace print function.
-                            Default: print            
-        """
-        self.patience = patience
-        self.verbose = verbose
-        self.counter = 0
-        self.best_score = None
-        self.early_stop = False
-        self.val_acc_max = 0
-        self.delta = delta
-        self.path_model = path_model
-        self.path_clf = path_clf
-        self.trace_func = trace_func
-    
-    def __call__(self, val_acc, model, clf):
-
-        score = val_acc
-
-        if self.best_score is None:
-            self.best_score = score
-            self.save_checkpoint(val_acc, model, clf)
-        
-        elif score < self.best_score + self.delta:
-            self.counter += 1
-            self.trace_func(f'EarlyStopping counter: {self.counter} out of {self.patience}')
-            if self.counter >= self.patience:
-                self.early_stop = True
-        
-        else:
-            self.best_score = score
-            self.save_checkpoint(val_acc, model, clf)
-            self.counter = 0
-
-    def save_checkpoint(self, val_acc, model, clf):
-        '''Saves model when validation loss decrease.'''
-        if self.verbose:
-            self.trace_func(f'Validation accuracy increased ({self.val_acc_min:.6f} --> {val_acc:.6f}).  Saving model ...')
-        
-        if self.path_model is not None:
-            torch.save(model.state_dict(), self.path_model)
-            joblib.dump(clf, self.path_clf)
-        
-        self.val_acc_max = val_acc
-
-def load_best_model(model, best_model_file, device):
-    model.load_state_dict(torch.load(best_model_file, map_location=device))
-    return model
-
-def eval_result(model, data, clf):
-    model.eval()
-    with torch.no_grad():
-        z = model()
-        z = (z[data.edge_label_index[0]] * z[data.edge_label_index[1]]).detach().cpu().numpy()
-        y = data.edge_label
-        
-        acc = clf.score(z, y)
-        auc = roc_auc_score(y, clf.predict_proba(z)[:,1])
-        return acc, auc
-
-def save_result(model, gene_list, result_dir):
-    pd.DataFrame(model.state_dict()['embedding.weight'].detach().cpu(), index=gene_list).to_csv(f'{result_dir}/embedding.csv')
-    print(f'\nEmbedding is saved to {result_dir}/embedding.csv.')
 
 def run(args):
     set_seed(args.seed)
@@ -210,7 +84,7 @@ def run(args):
     clf_file = f'{args.result_dir}/link_prediction.joblib'
     log_file = f'{args.result_dir}/log.txt'
     f = open(log_file, 'w')
-    early_stopping = EarlyStopping(patience=args.patience, path_model=node2vec_model_file, path_clf=clf_file)
+    early_stopping = EarlyStopping_node2vec(patience=args.patience, path_model=node2vec_model_file, path_clf=clf_file)
     
     for epoch in range(1, args.max_epoch+1):
         loss = train()
@@ -224,11 +98,11 @@ def run(args):
     
     model = load_best_model(model, node2vec_model_file, device)
     clf = joblib.load(clf_file)
-    test_acc, test_auc = eval_result(model, test_data, clf)
+    test_acc, test_auc = eval_result_node2vec(model, test_data, clf)
     print(f'\nTest Accuracy: {test_acc:.4f}, Test AUROC: {test_auc:.4f}')
     f.write(f'\nTest Accuracy: {test_acc:.4f}, Test AUROC: {test_auc:.4f}\n')
     f.close()
-    save_result(model, gene_list, args.result_dir)
+    save_embed(model, gene_list, args.result_dir)
     rmfile(node2vec_model_file)
     rmfile(clf_file)
 

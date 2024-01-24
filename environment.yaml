@@ -1,4 +1,4 @@
-name: Ditto
+name: TxT
 channels:
   - pytorch
   - conda-forge
