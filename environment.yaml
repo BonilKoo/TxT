@@ -8,7 +8,7 @@ dependencies:
   - pip=21.2.4=py310h06a4308_0
   - python=3.10.4=h2660328_0_cpython
   - pytorch=1.11.0=py3.10_cuda11.3_cudnn8.2.0_0
-  - pytorch_geometric=2.0.4
+  - pytorch_geometric=2.2.0=pyhd8ed1ab_0
   - pip:
       - pandas==1.4.2
       - scikit-learn==1.1.2
