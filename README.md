@@ -30,13 +30,13 @@ mamba env create -f environment.yaml
 
 ## Running on your dataset
 
-### 1. Pre-training gene embedding on a biological network
+## 1. Pre-training gene embedding on a biological network
 
 The embedding for each gene, used as input for training, is derived from a pre-trained node2vec model on a biological network.
 
 You can use other methods according to your need.
 
-#### 1) Input data
+### 1) Input data
 
 (1) *Network*
 
@@ -52,7 +52,7 @@ You can use other methods according to your need.
     ...
     ```
 
-#### 2) Training
+### 2) Training
 
 ```
 python embed_gene.py --network_file <network.csv> --result_dir <result_dir>
@@ -73,9 +73,9 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/src/embed_gene.py#L
 
 - `embedding.csv`: (csv) A csv file representing gene embedding. The gene names are listed in the first column, and the subsequent columns contain the embedding values for each gene in different dimensions.
 
-### 2. Training and Evaluation
+## 2. Training and Evaluation
 
-#### 1) Input data
+### 1) Input data
 
 (1) *Omics profile*
 
@@ -166,7 +166,7 @@ Only for multi-task learning
         OS_event    survival_event
         ```
 
-#### 2) Training
+### 2) Training
 
 * Regression
 
