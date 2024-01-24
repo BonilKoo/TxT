@@ -7,7 +7,7 @@ import pandas as pd
 import torch
 
 def mkdir(dir_name):
-    os.makedirs(dir_name, exit_ok=True)
+    os.makedirs(dir_name, exist_ok=True)
 
 def rmfile(file_name):
     if os.path.exists(file_name):
@@ -47,14 +47,14 @@ class EarlyStopping_node2vec:
         Args:
             patience (int): How long to wait after last time validation loss improved.
                             Default: 7
-            verbose (bool): If True, prints a message for each validation loss improvement. 
+            verbose (bool): If True, prints a message for each validation loss improvement.
                             Default: False
             delta (float): Minimum change in the monitored quantity to qualify as an improvement.
                             Default: 0
             path (str or None): Path for the checkpoint to be saved to.
                             Default: 'checkpoint.pt'
             trace_func (function): trace print function.
-                            Default: print            
+                            Default: print
         """
         self.patience = patience
         self.verbose = verbose
@@ -66,7 +66,7 @@ class EarlyStopping_node2vec:
         self.path_model = path_model
         self.path_clf = path_clf
         self.trace_func = trace_func
-    
+
     def __call__(self, val_acc, model, clf):
 
         score = val_acc
@@ -74,13 +74,13 @@ class EarlyStopping_node2vec:
         if self.best_score is None:
             self.best_score = score
             self.save_checkpoint(val_acc, model, clf)
-        
+
         elif score < self.best_score + self.delta:
             self.counter += 1
             self.trace_func(f'EarlyStopping counter: {self.counter} out of {self.patience}')
             if self.counter >= self.patience:
                 self.early_stop = True
-        
+
         else:
             self.best_score = score
             self.save_checkpoint(val_acc, model, clf)
@@ -90,9 +90,9 @@ class EarlyStopping_node2vec:
         '''Saves model when validation loss decrease.'''
         if self.verbose:
             self.trace_func(f'Validation accuracy increased ({self.val_acc_min:.6f} --> {val_acc:.6f}).  Saving model ...')
-        
+
         if self.path_model is not None:
             torch.save(model.state_dict(), self.path_model)
             joblib.dump(clf, self.path_clf)
-        
+
         self.val_acc_max = val_acc
