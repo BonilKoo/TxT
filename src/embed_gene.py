@@ -22,6 +22,7 @@ def parse_args():
     parser.add_argument('--val_ratio', type=float, default=0.05)
     parser.add_argument('--test_ratio', type=float, default=0.1)
     parser.add_argument('--device', type=int, default=0)
+    
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--lr', type=float, default=0.01)
     parser.add_argument('--patience', type=int, default=10)
@@ -40,11 +41,10 @@ def parse_args():
 
 def run(args):
     set_seed(args.seed)
-
-    gene_list, train_data, val_data, test_data = load_network(args.network_file, args.val_ratio, args.test_ratio)
-
     device = torch.device(f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu')
-
+    
+    gene_list, train_data, val_data, test_data = load_network(args.network_file, args.val_ratio, args.test_ratio)
+    
     model = Node2Vec(train_data.edge_index, embedding_dim=args.embedding_dim, walk_length=args.walk_length,
                      context_size=args.context_size, walks_per_node=args.walks_per_node,
                      num_negative_samples=args.num_negative_samples, p=args.p, q=args.q, sparse=args.sparse).to(device)
@@ -63,7 +63,7 @@ def run(args):
             loss = model.loss(pos_rw.to(device), neg_rw.to(device))
             loss.backward()
             optimizer.step()
-            total_loss += loss.item()
+            total_loss += loss.item() 
         return total_loss / len(loader)
 
     @torch.no_grad()
@@ -79,12 +79,14 @@ def run(args):
         clf = LogisticRegression().fit(train_z, train_y)
         val_acc = clf.score(val_z, val_y)
         val_auc = roc_auc_score(val_y, clf.predict_proba(val_z)[:,1])
+        
         return clf, val_acc, val_auc
 
     node2vec_model_file = f'{args.result_dir}/node2vec_model.pt'
     clf_file = f'{args.result_dir}/link_prediction.joblib'
     log_file = f'{args.result_dir}/log.txt'
     f = open(log_file, 'w')
+    
     early_stopping = EarlyStopping_node2vec(patience=args.patience, path_model=node2vec_model_file, path_clf=clf_file)
 
     for epoch in range(1, args.max_epoch+1):
@@ -104,12 +106,13 @@ def run(args):
     f.write(f'\nTest Accuracy: {test_acc:.4f}, Test AUROC: {test_auc:.4f}\n')
     f.close()
     save_embed(model, gene_list, args.result_dir)
-    rmfile(node2vec_model_file)
-    rmfile(clf_file)
+#     rmfile(node2vec_model_file)
+#     rmfile(clf_file)
 
 def main():
     args = parse_args()
     save_args(args)
+    
     run(args)
 
 if __name__ == '__main__':

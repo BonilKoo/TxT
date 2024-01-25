@@ -29,13 +29,14 @@ You can chage the package version according to your need.
 You can set up the environment using [Mamba](https://github.com/conda-forge/miniforge).
 ```
 mamba env create -f environment.yaml
+mamba activate TxT
 ```
 
 ## Running on your dataset
 
 ## 1. Pre-training gene embedding on a biological network
 
-The embedding for each gene, used as input for training, is derived from a pre-trained node2vec model on a biological network.
+The embedding for each gene, used as input for training, is derived from a pre-trained node2vec model on an undirected biological network.
 
 You can use other methods according to your need.
 
