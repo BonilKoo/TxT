@@ -15,6 +15,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, random_split, DataLoader
 
+from datasets import ClassificationDataset
 from utils import *
 
 def parse_args():
@@ -36,8 +37,8 @@ def parse_args():
     parser.add_argument('--noam_factor', type=int, default=2)
     parser.add_argument('--noam_warmup', type=int, default=4000)
     parser.add_argument('--lr', type=float, default=0.0001)
-    parser.add_argument('--patience', type=int, default=10)
-    parser.add_argument('--max_epoch', type=int, default=100)
+    parser.add_argument('--patience', type=int, default=50)
+    parser.add_argument('--max_epoch', type=int, default=1000)
     
     parser.add_argument('--n_heads', type=int, default=2)
     parser.add_argument('--d_model', type=int, default=64)
@@ -53,41 +54,8 @@ def parse_args():
     
     return parser.parse_args()
 
-class CustomDataset(Dataset):
-    def __init__(self, input_file, output_file):
-        input_df = pd.read_csv(input_file, index_col=0)
-        print(f'\nInput file {input_file} is loaded.')
-        output_df = pd.read_table(output_file, index_col=0)
-        print(f'Output file {output_file} is loaded.')
-        df = pd.merge(input_df, output_df, left_index=True, right_index=True)
-        print(f'\n# of samples = {len(df)}')
-        print(f'# of genes = {df.shape[1] - output_df.shape[1]}\n')
-        
-        self.gene_list = input_df.columns.to_list()
-        
-        self.x = df.iloc[:, :-1].values
-        self.y = df.iloc[:, -1].values
-        
-        self.label_dict = {label: idx for idx, label in enumerate(np.unique(self.y))} # classification
-        self.n_classes = len(self.label_dict) # classification
-        self.y = list(map(self.label_to_vector, self.y)) # classification
-        
-        self.length = len(df)
-    
-    def label_to_vector(self, value): # classification
-        return self.label_dict.get(value, None)
-    
-    def __getitem__(self, index):
-        x = torch.FloatTensor(self.x[index])
-#         y = torch.FloatTensor([self.y[index]]) # regression
-        y = torch.LongTensor(self.y)[index] # classficiation
-        return x, y
-    
-    def __len__(self):
-        return self.length
-
 def load_dataset(input_file, output_file, val_ratio, test_ratio, scaler, batch_size):
-    dataset = CustomDataset(input_file, output_file)
+    dataset = ClassificationDataset(input_file, output_file)
     
     dataset_size = len(dataset)
     train_ratio = 1 - val_ratio - test_ratio
@@ -616,8 +584,7 @@ def run(args):
     def test():
         model.eval()
         total_loss = 0
-        #for x, y in val_dataloader:
-        for x, y in test_dataloader:
+        for x, y in val_dataloader:
             x = x.to(device)
             y = y.to(device)
             
@@ -625,8 +592,7 @@ def run(args):
             loss = criterion(output, y)
             
             total_loss += loss.item() * x.size(0)
-        #return total_loss / len(val_dataloader.dataset)
-        return total_loss / len(test_dataloader.dataset)
+        return total_loss / len(val_dataloader.dataset)
     
     model_file = f'{args.result_dir}/model.pt'
     log_file = f'{args.result_dir}/log.txt'

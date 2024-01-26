@@ -20,6 +20,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, random_split, DataLoader
 
+from datasets import MultitaskDataset
 from utils import *
 
 def parse_args():
@@ -43,8 +44,8 @@ def parse_args():
     parser.add_argument('--noam_factor', type=int, default=2)
     parser.add_argument('--noam_warmup', type=int, default=4000)
     parser.add_argument('--lr', type=float, default=0.0001)
-    parser.add_argument('--patience', type=int, default=10)
-    parser.add_argument('--max_epoch', type=int, default=100)
+    parser.add_argument('--patience', type=int, default=50)
+    parser.add_argument('--max_epoch', type=int, default=1000)
 
     parser.add_argument('--n_heads', type=int, default=2)
     parser.add_argument('--d_model', type=int, default=64)
@@ -60,163 +61,8 @@ def parse_args():
 
     return parser.parse_args()
 
-class CustomDataset(Dataset):
-    def __init__(self, input_file, output_file, task_file, n_time_intervals, is_min_time_zero=True, extra_pct_time=0.1):
-        input_df = pd.read_csv(input_file, index_col=0)
-        print(f'\nInput file {input_file} is loaded.')
-        output_df = pd.read_table(output_file, index_col=0)
-        print(f'Output file {output_file} is loaded.')
-
-        task_df = pd.read_table(task_file)
-        print(f'Task file {task_file} is loaded.')
-        task_df_regression = task_df[task_df['task'] == 'regression']
-        task_df_classification = task_df[task_df['task'] == 'classification']
-        task_df_survival = task_df[task_df['task'].str.contains('survival')]
-        task_df = pd.concat([task_df_regression, task_df_classification, task_df_survival], ignore_index=True)
-        output_df = output_df[task_df['name']]
-
-        df = pd.merge(input_df, output_df, left_index=True, right_index=True)
-        print(f'\n# of samples = {len(df)}')
-        print(f'# of genes = {df.shape[1] - output_df.shape[1]}')
-
-
-        if ('survival_time' in task_df['task'].to_list()) and ('survival_event' in task_df['task'].to_list()):
-            self.flag_survival = 1
-        elif ('survival_time' not in task_df['task'].to_list()) and ('survival_event' not in task_df['task'].to_list()):
-            self.flag_survival = 0
-        else:
-            raise Exception('"survival_time" and "survival_event" must be included together.')
-        self.n_tasks = task_df.shape[0] - self.flag_survival
-        print(f'# of tasks = {self.n_tasks}\n')
-
-        self.name_task_dict = OrderedDict({name: task for name, task in task_df.values})
-
-        self.task_name_dict = OrderedDict()
-        for name, task in task_df.values:
-            if task in self.task_name_dict.keys():
-                self.task_name_dict[task].append(name)
-            else:
-                if 'survival' in task:
-                    self.task_name_dict[task] = name
-                else:
-                    self.task_name_dict[task] = [name]
-        
-        # PCGrad
-        if 'regression' in self.task_name_dict.keys():
-            flag_regression = True
-        else:
-            flag_regression = False
-        if 'classification' in self.task_name_dict.keys():
-            flag_classification = True
-        else:
-            flag_classification = False
-        
-        self.idx_task_dict = OrderedDict()
-        if flag_regression:
-            for i in range(len(self.task_name_dict['regression'])):
-                self.idx_task_dict[len(self.idx_task_dict)] = 'regression'
-        if flag_classification:
-            for i in range(len(self.task_name_dict['classification'])):
-                self.idx_task_dict[len(self.idx_task_dict)] = 'classification'
-        if self.flag_survival:
-            self.idx_task_dict[len(self.idx_task_dict)] = 'survival'
-        # PCGrad
-
-        self.gene_list = input_df.columns.to_list()
-
-        self.x = df.iloc[:, :-output_df.shape[1]].values
-
-        self.y_df = df.iloc[:, -output_df.shape[1]:]
-        self.classification_name_label_dict = OrderedDict()
-        self.d_output_dict = OrderedDict()
-        for task in self.task_name_dict.keys():
-            if task == 'regression':
-                for name in self.task_name_dict[task]:
-                    self.d_output_dict[name] = 1
-            elif task == 'classification':
-                for name in self.task_name_dict[task]:
-                    self.classification_name_label_dict[name] = {label: idx for idx, label in enumerate(np.unique(self.y_df[name]))}
-                    self.tmp_dict = self.classification_name_label_dict[name]
-                    self.y_df[name] = list(map(self.label_to_vector, self.y_df[name]))
-                    del self.tmp_dict
-                    self.d_output_dict[name] = len(self.classification_name_label_dict[name])
-            elif task == 'survival_time':
-                self.T = self.y_df[self.task_name_dict['survival_time']].values
-                self.E = self.y_df[self.task_name_dict['survival_event']].values
-                self.y_df.drop(columns=[self.task_name_dict['survival_time'], self.task_name_dict['survival_event']], inplace=True)
-                self.n_time_intervals = n_time_intervals
-                self.y_survival = self.compute_Y_survival(self.T, self.E, is_min_time_zero, extra_pct_time)
-                self.d_output_dict['survival_time'] = self.num_times
-            else:
-                continue
-
-        self.length = len(df)
-
-    def label_to_vector(self, value):
-        return self.tmp_dict.get(value, None)
-
-    def get_time_buckets(self): # survival
-        return [(self.times[i], self.times[i+1]) for i in range(len(self.times) - 1)]
-
-    def get_times(self, T, is_min_time_zero, extra_pct_time): # survival
-        max_time = max(T)
-        if is_min_time_zero:
-            min_time = 0
-        else:
-            min_time = min(T)
-
-        if 0 <= extra_pct_time <= 1:
-            p = extra_pct_time
-        else:
-            raise Exception('"extra_pct_time" has to be between [0,1].')
-
-        self.times = np.linspace(min_time, max_time * (1 + p), self.n_time_intervals)
-        self.time_buckets = self.get_time_buckets()
-        self.num_times = len(self.time_buckets)
-
-    def compute_Y_survival(self, T, E, is_min_time_zero, extra_pct_time): # survival
-        self.get_times(T, is_min_time_zero, extra_pct_time)
-
-        Y = []
-
-        for t, e in zip(T, E):
-            y = np.zeros(self.num_times + 1)
-            min_abs_value = [abs(a_j_1 - t) for (a_j_1, a_j) in self.time_buckets]
-            index = np.argmin(min_abs_value)
-
-            if e == 1:
-                y[index] = 1
-                Y.append(y.tolist())
-            else:
-                y[index:] = 1
-                Y.append(y.tolist())
-
-        return torch.FloatTensor(Y)
-
-    def __getitem__(self, index):
-        x = torch.FloatTensor(self.x[index])
-        y_list = []
-        for task in self.task_name_dict.keys():
-            if task == 'regression':
-                for name in self.task_name_dict[task]:
-                    y_list.append(torch.FloatTensor([self.y_df[name].values[index]]))
-            elif task == 'classification':
-                for name in self.task_name_dict[task]:
-                    y_list.append(torch.LongTensor(self.y_df[name].values)[index])
-        if self.flag_survival:
-            y_list.append(torch.FloatTensor(self.y_survival[index]))
-            T = torch.FloatTensor(self.T)[index]
-            E = torch.FloatTensor(self.E)[index]
-        else:
-            T = []
-            E = []
-        return x, *y_list, T, E
-
-    def __len__(self):
-        return self.length
-
 def load_dataset(input_file, output_file, task_file, val_ratio, test_ratio, scaler, batch_size, n_time_intervals):
-    dataset = CustomDataset(input_file, output_file, task_file, n_time_intervals)
+    dataset = MultitaskDataset(input_file, output_file, task_file, n_time_intervals)
 
     dataset_size = len(dataset)
     train_ratio = 1 - val_ratio - test_ratio
@@ -966,8 +812,7 @@ def run(args):
     def test():
         model.eval()
         total_loss = 0
-        #for x, *y_list, T, E in val_dataloader:
-        for x, *y_list, T, E in test_dataloader:
+        for x, *y_list, T, E in val_dataloader:
             x = x.to(device)
             y_list = [y.to(device) for y in y_list]
 
@@ -975,8 +820,7 @@ def run(args):
             loss = criterion(outputs, y_list, E, Triangle, task_name_dict, flag_survival)
 
             total_loss += loss.item() * x.size(0)
-            #return total_loss / len(val_dataloader.dataset)
-            return total_loss / len(test_dataloader.dataset)
+            return total_loss / len(val_dataloader.dataset)
 
     model_file = f'{args.result_dir}/model.pt'
     log_file = f'{args.result_dir}/log.txt'

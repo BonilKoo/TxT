@@ -39,8 +39,8 @@ def parse_args():
     parser.add_argument('--noam_factor', type=int, default=2)
     parser.add_argument('--noam_warmup', type=int, default=4000)
     parser.add_argument('--lr', type=float, default=0.0001)
-    parser.add_argument('--patience', type=int, default=10)
-    parser.add_argument('--max_epoch', type=int, default=100)
+    parser.add_argument('--patience', type=int, default=50)
+    parser.add_argument('--max_epoch', type=int, default=1000)
     
     parser.add_argument('--n_heads', type=int, default=2)
     parser.add_argument('--d_model', type=int, default=64)
@@ -56,92 +56,10 @@ def parse_args():
     
     return parser.parse_args()
 
-class CustomDataset(Dataset):
-#     def __init__(self, input_file, output_file): # regression & classificiation
-    def __init__(self, input_file, output_file, n_time_intervals, is_min_time_zero=True, extra_pct_time=0.1): # survival
-        input_df = pd.read_csv(input_file, index_col=0)
-        print(f'\nInput file {input_file} is loaded.')
-        output_df = pd.read_table(output_file, index_col=0)
-        print(f'Output file {output_file} is loaded.')
-        df = pd.merge(input_df, output_df, left_index=True, right_index=True)
-        print(f'\n# of samples = {len(df)}')
-        print(f'# of genes = {df.shape[1] - output_df.shape[1]}\n')
-        
-        self.gene_list = input_df.columns.to_list()
-        
-#         self.x = df.iloc[:, :-1].values # regression & classification
-        self.x = df.iloc[:, :-2].values # survival
-#         self.y = df.iloc[:, -1].values # regression & classification
-        self.T = df.iloc[:, -2].values # survival
-        self.E = df.iloc[:, -1].values # survival
-        
-#         self.label_dict = {label: idx for idx, label in enumerate(np.unique(self.y))} # classification
-#         self.n_classes = len(self.label_dict) # classification
-#         self.y = list(map(self.label_to_vector, self.y)) # classification
-        
-        self.n_time_intervals = n_time_intervals # survival
-        self.y = self.compute_Y(self.T, self.E, is_min_time_zero, extra_pct_time) # survival
-        
-        self.length = len(df)
-    
-    def label_to_vector(self, value): # classification
-        return self.label_dict.get(value, None)
-    
-    def get_time_buckets(self): # survival
-        return [(self.times[i], self.times[i+1]) for i in range(len(self.times) - 1)]
-    
-    def get_times(self, T, is_min_time_zero, extra_pct_time): # survival
-        max_time = max(T)
-        if is_min_time_zero:
-            min_time = 0
-        else:
-            min_time = min(T)
-        
-        if 0 <= extra_pct_time <= 1:
-            p = extra_pct_time
-        else:
-            raise Exception('"extra_pct_time" has to be between [0,1].')
-        
-        self.times = np.linspace(min_time, max_time * (1 + p), self.n_time_intervals)
-        self.time_buckets = self.get_time_buckets()
-        self.num_times = len(self.time_buckets)
-    
-    def compute_Y(self, T, E, is_min_time_zero, extra_pct_time): # survival
-        self.get_times(T, is_min_time_zero, extra_pct_time)
-        
-        Y = []
-        
-        for t, e in zip(T, E):
-            y = np.zeros(self.num_times + 1)
-            min_abs_value = [abs(a_j_1 - t) for (a_j_1, a_j) in self.time_buckets]
-            index = np.argmin(min_abs_value)
-            
-            if e == 1:
-                y[index] = 1
-                Y.append(y.tolist())
-            else:
-                y[index:] = 1
-                Y.append(y.tolist())
-        
-        return torch.FloatTensor(Y)
-    
-    def __getitem__(self, index):
-        x = torch.FloatTensor(self.x[index])
-#         y = torch.FloatTensor([self.y[index]]) # regression
-#         y = torch.LongTensor(self.y)[index] # classficiation
-        y = torch.FloatTensor(self.y[index]) # survival
-        T = torch.FloatTensor(self.T)[index] # survival
-        E = torch.LongTensor(self.E)[index] # survival
-#         return x, y # regression & classification
-        return x, y, T, E # survival
-    
-    def __len__(self):
-        return self.length
-
 # def load_dataset(input_file, output_file, val_ratio, test_ratio, scaler, batch_size): # regression & classification
 def load_dataset(input_file, output_file, val_ratio, test_ratio, scaler, batch_size, n_time_intervals): # survival
 #     dataset = CustomDataset(input_file, output_file) # regression & classification
-    dataset = CustomDataset(input_file, output_file, n_time_intervals) # survival
+    dataset = SurvivalDataset(input_file, output_file, n_time_intervals) # survival
     
     dataset_size = len(dataset)
     train_ratio = 1 - val_ratio - test_ratio
@@ -798,8 +716,7 @@ def run(args):
         model.eval()
         total_loss = 0
 #         for x, y in val_dataloader: # regression & classification
-        #for x, y, T, E in val_dataloader: # survival
-        for x, y, T, E in test_dataloader: # survival
+        for x, y, T, E in val_dataloader: # survival
             x = x.to(device)
             y = y.to(device)
             
@@ -808,8 +725,7 @@ def run(args):
             loss = SurvivalLoss(output, y, E, Triangle) # survival
             
             total_loss += loss.item() * x.size(0)
-        #return total_loss / len(val_dataloader.dataset)
-        return total_loss / len(test_dataloader.dataset)
+        return total_loss / len(val_dataloader.dataset)
     
     model_file = f'{args.result_dir}/model.pt'
     log_file = f'{args.result_dir}/log.txt'
