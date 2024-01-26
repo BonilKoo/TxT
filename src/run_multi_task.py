@@ -46,12 +46,12 @@ def parse_args():
     parser.add_argument('--patience', type=int, default=10)
     parser.add_argument('--max_epoch', type=int, default=100)
 
-    parser.add_argument('--n_heads', type=int, default=8)
-    parser.add_argument('--d_model', type=int, default=512)
+    parser.add_argument('--n_heads', type=int, default=2)
+    parser.add_argument('--d_model', type=int, default=64)
     parser.add_argument('--dropout', type=float, default=0.1)
-    parser.add_argument('--d_ff', type=int, default=2048)
+    parser.add_argument('--d_ff', type=int, default=256)
     parser.add_argument('--norm_first', action='store_true')
-    parser.add_argument('--n_layers', type=int, default=6)
+    parser.add_argument('--n_layers', type=int, default=2)
 
     parser.add_argument('--aggfunc', choices=['Flatten', 'Avgpool'], default='Flatten')
     parser.add_argument('--d_hidden1', type=int, default=128)

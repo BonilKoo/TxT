@@ -36,7 +36,7 @@ def load_best_model(model, best_model_file, device):
 
 def save_embed(model, gene_list, result_dir):
     pd.DataFrame(model.state_dict()['embedding.weight'].detach().cpu(), index=gene_list).to_csv(f'{result_dir}/embedding.csv')
-    print(f'\nEmbedding is saved to {result_dir}/embedding.csv.')
+    print(f'\nEmbedding is saved to {result_dir}/embedding.csv.\n')
 
 class EarlyStopping_node2vec:
     """
