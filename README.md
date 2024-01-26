@@ -71,7 +71,7 @@ python src/embed_gene.py --network_file <network.csv> --result_dir <result_dir>
 - `--sparse`: An option to control the memory efficiency of storing random walks.
 - `--device`: (int) Device number.
 
-Check the [script](https://github.com/BonilKoo/TxT/blob/main/src/embed_gene.py#L19) for other options.
+Check the [script](https://github.com/BonilKoo/TxT/blob/main/src/embed_gene.py#L18) for other options.
 
 *Output*
 
@@ -217,7 +217,7 @@ Only for multi-task learning
 - `--norm_first`: An option to perform LayerNorms before other attention and feedforward operations, otherwise after.
 - `--task_file`: (tsv) Only for multi-task learning. A tsv file that outlines a set of tasks. Each row in the file represents a specific task, and the information is organized into two columns: "task name" and "prediction type".
 
-Chek the [script]() for other options.
+Check the [script](https://github.com/BonilKoo/TxT/blob/main/src/run_multi_task.py#L29) for other options.
 
 *Outputs*
 
