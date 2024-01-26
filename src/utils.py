@@ -38,6 +38,9 @@ def save_embed(model, gene_list, result_dir):
     pd.DataFrame(model.state_dict()['embedding.weight'].detach().cpu(), index=gene_list).to_csv(f'{result_dir}/embedding.csv')
     print(f'\nEmbedding is saved to {result_dir}/embedding.csv.\n')
 
+def get_clones(module, N):
+    return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
+
 class EarlyStopping_node2vec:
     """
     Code based on: https://github.com/Bjarten/early-stopping-pytorch/blob/master/pytorchtools.py
