@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 
 from datasets import RegressionDataset, load_dataset
-from evaluation import eval_result_regression
+from evaluation import eval_result_regression, print_save_result_regression
 from models import TxT
 from utils import *
 
@@ -72,8 +72,8 @@ def run(args):
             x = x.to(device)
             y = y.to(device)
             
-            output = model(x)
-            loss = criterion(output[0], y)
+            output = model(x)[0]
+            loss = criterion(output, y)
             
             optimizer.zero_grad()
             loss.backward()
@@ -90,8 +90,8 @@ def run(args):
             x = x.to(device)
             y = y.to(device)
             
-            output = model(x)
-            loss = criterion(output[0], y)
+            output = model(x)[0]
+            loss = criterion(output, y)
             
             total_loss += loss.item() * x.size(0)
         return total_loss / len(val_dataloader.dataset)
@@ -127,10 +127,10 @@ def run(args):
     f.write('\n')
     model = load_best_model(model, model_file, device)
     
-    print_save_result(model, train_dataloader, device, f, 'Training')
+    print_save_result_regression(model, train_dataloader, device, f, 'Training')
     if args.val_ratio > 0:
-        print_save_result(model, val_dataloader, device, f, 'Validation')
-    print_save_result(model, test_dataloader, device, f, 'Test')    
+        print_save_result_regression(model, val_dataloader, device, f, 'Validation')
+    print_save_result_regression(model, test_dataloader, device, f, 'Test')    
     f.close()
 
 def main():

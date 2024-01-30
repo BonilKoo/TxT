@@ -27,7 +27,7 @@ def eval_result_regression(model, dataloader, device):
             y_true = np.append(y_true, y)
             x = x.to(device)
             
-            output = model(x)
+            output = model(x)[0]
             
             y_pred = torch.cat((y_pred, output.detach().cpu()))
     
@@ -67,7 +67,7 @@ def eval_result_multitask_regression(model, dataloader, device, index): # regres
     return MAE, RMSE, PCC, SCC
 
 def print_save_result_regression(model, dataloader, device, log, dataset_type):
-    MAE, RMSE, PCC, SCC = eval_result(model, dataloader, device)
+    MAE, RMSE, PCC, SCC = eval_result_regression(model, dataloader, device)
     log.write(f'[{dataset_type:^10s}] MAE: {MAE:.4f}, RMSE: {RMSE:.4f}, PCC: {PCC:.4f}, SCC: {SCC:.4f}\n')
     print(f'[{dataset_type:^10s}] MAE: {MAE:.4f}, RMSE: {RMSE:.4f}, PCC: {PCC:.4f}, SCC: {SCC:.4f}')
 
@@ -83,7 +83,7 @@ def eval_result_classification(model, dataloader, device, n_classes): # classifi
             
             x = x.to(device)
             
-            output = model(x).detach().cpu()
+            output = model(x)[0].detach().cpu()
             
             y_score = torch.cat((y_score, output))
             output = F.softmax(output, dim=1).argmax(1)
@@ -217,7 +217,7 @@ def eval_result_survival(model, dataloader, device, num_times, times): # surviva
             
             x = x.to(device)
             
-            output = model(x).detach().cpu().numpy()
+            output = model(x)[0].detach().cpu().numpy()
             
             score = np.append(score, output, axis=0)
     
@@ -254,8 +254,6 @@ def print_save_result_survival(model, dataloader, device, log, dataset_type, num
     C_Index, IBS = eval_result_survival(model, dataloader, device, num_times, times)
     log.write(f'[{dataset_type:^10s}] C-Index: {C_Index:.4f}, IBS: {IBS:.4f}\n')
     print(f'[{dataset_type:^10s}] C-Index: {C_Index:.4f}, IBS: {IBS:.4f}')
-
-
 
 def print_save_result_multitask(model, dataloader, device, log, dataset_type,
                       task_name_dict, d_output_dict, num_times, times, flag_survival):

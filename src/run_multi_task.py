@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 
 from datasets import MultitaskDataset, load_dataset
+from evaluation import print_save_result_multitask
 from models import TxT
 from pcgrad import PCGrad_backward
 from utils import *
@@ -144,10 +145,10 @@ def run(args):
     f.write('\n')
     model = load_best_model(model, model_file, device)
 
-    print_save_result(model, train_dataloader, device, f, 'Training', task_name_dict, d_output_dict, num_times, times, flag_survival)
+    print_save_result_multitask(model, train_dataloader, device, f, 'Training', task_name_dict, d_output_dict, num_times, times, flag_survival)
     if args.val_ratio > 0:
-        print_save_result(model, val_dataloader, device, f, 'Validation', task_name_dict, d_output_dict, num_times, times, flag_survival)
-    print_save_result(model, test_dataloader, device, f, 'Test', task_name_dict, d_output_dict, num_times, times, flag_survival)
+        print_save_result_multitask(model, val_dataloader, device, f, 'Validation', task_name_dict, d_output_dict, num_times, times, flag_survival)
+    print_save_result_multitask(model, test_dataloader, device, f, 'Test', task_name_dict, d_output_dict, num_times, times, flag_survival)
 
     f.close()
 

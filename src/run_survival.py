@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 
 from datasets import SurvivalDataset, load_dataset
-from evaluation import eval_result_survival
+from evaluation import eval_result_survival, print_save_result_survival
 from models import TxT
 from utils import *
 
@@ -80,9 +80,9 @@ def run(args):
             x = x.to(device)
             y = y.to(device)
             
-            output = model(x)
+            output = model(x)[0]
 #             loss = criterion(output, y) # regression & classification
-            loss = SurvivalLoss(output[0], y, E, Triangle) # survival
+            loss = SurvivalLoss(output, y, E, Triangle) # survival
             
             optimizer.zero_grad()
             loss.backward()
@@ -100,9 +100,9 @@ def run(args):
             x = x.to(device)
             y = y.to(device)
             
-            output = model(x)
+            output = model(x)[0]
 #             loss = criterion(output, y) # regression & classification
-            loss = SurvivalLoss(output[0], y, E, Triangle) # survival
+            loss = SurvivalLoss(output, y, E, Triangle) # survival
             
             total_loss += loss.item() * x.size(0)
         return total_loss / len(val_dataloader.dataset)
@@ -149,10 +149,10 @@ def run(args):
 #     print_save_result(model, test_dataloader, device, f, 'Test', n_classes)
     
     # survival
-    print_save_result(model, train_dataloader, device, f, 'Training', num_times, times)
+    print_save_result_survival(model, train_dataloader, device, f, 'Training', num_times, times)
     if args.val_ratio > 0:
-        print_save_result(model, val_dataloader, device, f, 'Validation', num_times, times)
-    print_save_result(model, test_dataloader, device, f, 'Test', num_times, times)
+        print_save_result_survival(model, val_dataloader, device, f, 'Validation', num_times, times)
+    print_save_result_survival(model, test_dataloader, device, f, 'Test', num_times, times)
     
     f.close()
 

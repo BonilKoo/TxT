@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 
 from datasets import ClassificationDataset, load_dataset
-from evaluation import eval_result_classification
+from evaluation import eval_result_classification, print_save_result_classification
 from models import TxT
 from utils import *
 
@@ -73,8 +73,8 @@ def run(args):
         for x, y in train_dataloader:
             x = x.to(device)
             y = y.to(device)
-            output = model(x)
-            loss = criterion(output[0], y)
+            output = model(x)[0]
+            loss = criterion(output, y)
             
             optimizer.zero_grad()
             loss.backward()
@@ -91,8 +91,8 @@ def run(args):
             x = x.to(device)
             y = y.to(device)
             
-            output = model(x)
-            loss = criterion(output[0], y)
+            output = model(x)[0]
+            loss = criterion(output, y)
             
             total_loss += loss.item() * x.size(0)
         return total_loss / len(val_dataloader.dataset)
@@ -134,10 +134,10 @@ def run(args):
 #     print_save_result(model, test_dataloader, device, f, 'Test')
     
     # classification
-    print_save_result(model, train_dataloader, device, f, 'Training', n_classes)
+    print_save_result_classification(model, train_dataloader, device, f, 'Training', n_classes)
     if args.val_ratio > 0:
-        print_save_result(model, val_dataloader, device, f, 'Validation', n_classes)
-    print_save_result(model, test_dataloader, device, f, 'Test', n_classes)
+        print_save_result_classification(model, val_dataloader, device, f, 'Validation', n_classes)
+    print_save_result_classification(model, test_dataloader, device, f, 'Test', n_classes)
     f.close()
 
 def main():
