@@ -58,7 +58,7 @@ def run(args):
     device = torch.device(f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu')
     d_output_dict = {'task': num_times}
 
-    model = CustomModel(args.embed_file, gene_list, device,
+    model = TxT(args.embed_file, gene_list, device,
 #                         n_heads, d_model, dropout, d_ff, norm_first, n_layers).to(device) # regression
                         args.n_heads, args.d_model, args.dropout, args.d_ff, args.norm_first, args.n_layers, # classification & survival
 #                         args.aggfunc, args.d_hidden1, args.d_hidden2, args.slope, n_classes).to(device) # classification

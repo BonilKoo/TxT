@@ -260,7 +260,7 @@ def print_save_result_multitask(model, dataloader, device, log, dataset_type,
     idx = 0
     if 'regression' in task_name_dict.keys():
         for name in task_name_dict['regression']:
-            MAE, RMSE, PCC, SCC = eval_result_regression(model, dataloader, device, idx)
+            MAE, RMSE, PCC, SCC = eval_result_multitask_regression(model, dataloader, device, idx)
             log.write(f'[{name:^17s}] [{dataset_type:^10s}] MAE: {MAE:.4f}, RMSE: {RMSE:.4f}, PCC: {PCC:.4f}, SCC: {SCC:.4f}\n')
             print(f'[{name:^17s}] [{dataset_type:^10s}] MAE: {MAE:.4f}, RMSE: {RMSE:.4f}, PCC: {PCC:.4f}, SCC: {SCC:.4f}')
             idx += 1
@@ -268,14 +268,14 @@ def print_save_result_multitask(model, dataloader, device, log, dataset_type,
     if 'classification' in task_name_dict.keys():
         for name in task_name_dict['classification']:
             n_classes = d_output_dict[name]
-            accuracy, precision, recall, f1, auroc = eval_result_classification(model, dataloader, device, n_classes, idx) # classification
+            accuracy, precision, recall, f1, auroc = eval_result_multitask_classification(model, dataloader, device, n_classes, idx) # classification
             log.write(f'[{name:^17s}] [{dataset_type:^10s}] Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}, AUROC: {auroc:.4f}\n') # classification
             print(f'[{name:^17s}] [{dataset_type:^10s}] Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}, AUROC: {auroc:.4f}') # classification
             idx += 1
 
     if flag_survival:
         name = 'survival'
-        C_Index, IBS = eval_result_survival(model, dataloader, device, num_times, times, idx) # survival
+        C_Index, IBS = eval_result_multitask_survival(model, dataloader, device, num_times, times, idx) # survival
         log.write(f'[{name:^17s}] [{dataset_type:^10s}] C-Index: {C_Index:.4f}, IBS: {IBS:.4f}\n') # survival
         print(f'[{name:^17s}] [{dataset_type:^10s}] C-Index: {C_Index:.4f}, IBS: {IBS:.4f}') # survival
 
