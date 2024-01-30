@@ -56,12 +56,13 @@ def run(args):
     times = train_dataloader.dataset.dataset.times
     
     device = torch.device(f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu')
+    d_output_dict = {'task': num_times}
 
     model = CustomModel(args.embed_file, gene_list, device,
 #                         n_heads, d_model, dropout, d_ff, norm_first, n_layers).to(device) # regression
                         args.n_heads, args.d_model, args.dropout, args.d_ff, args.norm_first, args.n_layers, # classification & survival
 #                         args.aggfunc, args.d_hidden1, args.d_hidden2, args.slope, n_classes).to(device) # classification
-                        args.aggfunc, args.d_hidden1, args.d_hidden2, args.slope, num_times).to(device) # survival
+                        args.aggfunc, args.d_hidden1, args.d_hidden2, args.slope, d_output_dict).to(device) # survival
     if args.xavier_uniform:
         for name, p in model.named_parameters():
             if ('embed' not in name) & (p.dim() > 1):
@@ -81,7 +82,7 @@ def run(args):
             
             output = model(x)
 #             loss = criterion(output, y) # regression & classification
-            loss = SurvivalLoss(output, y, E, Triangle) # survival
+            loss = SurvivalLoss(output[0], y, E, Triangle) # survival
             
             optimizer.zero_grad()
             loss.backward()
@@ -101,7 +102,7 @@ def run(args):
             
             output = model(x)
 #             loss = criterion(output, y) # regression & classification
-            loss = SurvivalLoss(output, y, E, Triangle) # survival
+            loss = SurvivalLoss(output[0], y, E, Triangle) # survival
             
             total_loss += loss.item() * x.size(0)
         return total_loss / len(val_dataloader.dataset)

@@ -52,10 +52,11 @@ def run(args):
     train_dataloader, val_dataloader, test_dataloader, gene_list = load_dataset(args.input_file, args.output_file, args.val_ratio, args.test_ratio, args.scaler, args.batch_size, task='regression')
     
     device = torch.device(f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu')
+    d_output_dict = {'task': 1}
     
     model = TxT(args.embed_file, gene_list, device,
                         args.n_heads, args.d_model, args.dropout, args.d_ff, args.norm_first, args.n_layers,
-                        args.aggfunc, args.d_hidden1, args.d_hidden2, args.slope).to(device)
+                        args.aggfunc, args.d_hidden1, args.d_hidden2, args.slope, d_output_dict).to(device)
     if args.xavier_uniform:
         for name, p in model.named_parameters():
             if ('embed' not in name) & (p.dim() > 1):
@@ -72,7 +73,7 @@ def run(args):
             y = y.to(device)
             
             output = model(x)
-            loss = criterion(output, y)
+            loss = criterion(output[0], y)
             
             optimizer.zero_grad()
             loss.backward()
@@ -90,7 +91,7 @@ def run(args):
             y = y.to(device)
             
             output = model(x)
-            loss = criterion(output, y)
+            loss = criterion(output[0], y)
             
             total_loss += loss.item() * x.size(0)
         return total_loss / len(val_dataloader.dataset)

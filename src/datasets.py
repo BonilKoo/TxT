@@ -6,6 +6,7 @@ import pandas as pd
 
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
+import torch
 from torch.utils.data import Dataset, random_split, DataLoader
 
 from torch_geometric.utils.convert import from_networkx

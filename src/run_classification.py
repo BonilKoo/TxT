@@ -53,11 +53,12 @@ def run(args):
     n_classes = train_dataloader.dataset.dataset.n_classes # classification
     
     device = torch.device(f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu')
+    d_output_dict = {'task': n_classes}
     
     model = TxT(args.embed_file, gene_list, device,
 #                         n_heads, d_model, dropout, d_ff, norm_first, n_layers).to(device) # regression
                         args.n_heads, args.d_model, args.dropout, args.d_ff, args.norm_first, args.n_layers,
-                        args.aggfunc, args.d_hidden1, args.d_hidden2, args.slope, n_classes).to(device) # classification
+                        args.aggfunc, args.d_hidden1, args.d_hidden2, args.slope, d_output_dict).to(device) # classification
     if args.xavier_uniform:
         for name, p in model.named_parameters():
             if ('embed' not in name) & (p.dim() > 1):
@@ -73,7 +74,7 @@ def run(args):
             x = x.to(device)
             y = y.to(device)
             output = model(x)
-            loss = criterion(output, y)
+            loss = criterion(output[0], y)
             
             optimizer.zero_grad()
             loss.backward()
@@ -91,7 +92,7 @@ def run(args):
             y = y.to(device)
             
             output = model(x)
-            loss = criterion(output, y)
+            loss = criterion(output[0], y)
             
             total_loss += loss.item() * x.size(0)
         return total_loss / len(val_dataloader.dataset)

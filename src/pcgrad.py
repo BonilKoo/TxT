@@ -1,6 +1,11 @@
 from itertools import accumulate
 import random
 
+import torch
+import torch.nn as nn
+
+from utils import SurvivalLoss
+
 def PCGrad_backward(optimizer, outputs, y_list, n_tasks, idx_task_dict, flag_survival, E, Triangle, device): # PCGrad
     '''Code based on: https://github.com/wgchang/PCGrad-pytorch-example/blob/master/pcgrad-example.py'''
     criterion_regression = nn.MSELoss()

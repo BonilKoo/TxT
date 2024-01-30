@@ -3,7 +3,7 @@ from utils import get_clones
 import torch.nn as nn
 
 from embed import *
-from layers import EncoderLayer
+from layers import EncoderLayer, TaskSpecificLayer
 
 class Encoder(nn.Module):
     def __init__(self, embed_file, gene_list, device,
