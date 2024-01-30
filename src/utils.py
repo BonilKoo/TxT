@@ -1,3 +1,4 @@
+import copy
 import joblib
 import os
 import random
@@ -40,6 +41,54 @@ def save_embed(model, gene_list, result_dir):
 
 def get_clones(module, N):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
+
+def SurvivalLoss(input, target, E, Triangle, reduction='mean'): # survival
+    score_cens = input[E == 0]
+    score_uncens = input[E == 1]
+    target_cens = target[E == 0]
+    target_uncens = target[E == 1]
+    
+    phi_uncens = torch.exp(torch.mm(score_uncens, Triangle))
+    reduc_phi_uncens = torch.sum(phi_uncens * target_uncens, dim=1)
+    
+    phi_cens = torch.exp(torch.mm(score_cens, Triangle))
+    reduc_phi_cens = torch.sum(phi_cens * target_cens, dim=1)
+    
+    z_uncens = torch.exp(torch.mm(score_uncens, Triangle))
+    reduc_z_uncens = torch.sum(z_uncens, dim=1)
+    
+    z_cens = torch.exp(torch.mm(score_cens, Triangle))
+    reduc_z_cens = torch.sum(z_cens, dim=1)
+    
+    loss = - (
+                torch.sum(torch.log(reduc_phi_uncens)) \
+                + torch.sum(torch.log(reduc_phi_cens)) \
+                - torch.sum(torch.log(reduc_z_uncens)) \
+                - torch.sum(torch.log(reduc_z_cens))
+            )
+    
+    if reduction == 'mean':
+        loss = loss / E.shape[0]
+    
+    return loss
+
+def criterion(outputs, y_list, E, Triangle, task_name_dict, flag_survival): # naive (sum)
+    criterion_regression = nn.MSELoss()
+    criterion_classification = nn.CrossEntropyLoss()
+    loss_list = []
+    idx = 0
+    if 'regression' in task_name_dict.keys():
+        for name in task_name_dict['regression']:
+            loss_list.append(criterion_regression(outputs[idx], y_list[idx]))
+            idx += 1
+    if 'classification' in task_name_dict.keys():
+        for name in task_name_dict['classification']:
+            loss_list.append(criterion_classification(outputs[idx], y_list[idx]))
+            idx += 1
+    if flag_survival:
+        loss_list.append(SurvivalLoss(outputs[idx], y_list[idx], E, Triangle))
+
+    return sum(loss_list)
 
 class EarlyStopping_node2vec:
     """

@@ -1,6 +1,10 @@
-from sklearn.metrics import roc_auc_score
+import numpy as np
+from scipy.stats import spearmanr
+from sklearn.metrics import mean_absolute_error, mean_squared_error, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+from sksurv.metrics import concordance_index_censored, integrated_brier_score
 
 import torch
+import torch.nn.functional as F
 
 def eval_result_node2vec(model, data, clf):
     model.eval()
@@ -37,6 +41,36 @@ def eval_result_regression(model, dataloader, device):
     
     return MAE, RMSE, PCC, SCC
 
+def eval_result_multitask_regression(model, dataloader, device, index): # regression
+    y_true = np.empty(0)
+    y_pred = torch.empty((0,1))
+
+    model.eval()
+    with torch.no_grad():
+        for x, *y_list, T, E in dataloader:
+            y_true = np.append(y_true, y_list[index])
+
+            x = x.to(device)
+
+            output = model(x)[index].detach().cpu()
+
+            y_pred = torch.cat((y_pred, output))
+
+    y_true = torch.Tensor(y_true)
+    y_pred = y_pred.squeeze(-1)
+
+    MAE = mean_absolute_error(y_true, y_pred)
+    RMSE = mean_squared_error(y_true, y_pred, squared=False)
+    PCC = np.corrcoef(y_true, y_pred)[0][1]
+    SCC = spearmanr(y_true, y_pred)[0]
+
+    return MAE, RMSE, PCC, SCC
+
+def print_save_result_regression(model, dataloader, device, log, dataset_type):
+    MAE, RMSE, PCC, SCC = eval_result(model, dataloader, device)
+    log.write(f'[{dataset_type:^10s}] MAE: {MAE:.4f}, RMSE: {RMSE:.4f}, PCC: {PCC:.4f}, SCC: {SCC:.4f}\n')
+    print(f'[{dataset_type:^10s}] MAE: {MAE:.4f}, RMSE: {RMSE:.4f}, PCC: {PCC:.4f}, SCC: {SCC:.4f}')
+
 def eval_result_classification(model, dataloader, device, n_classes): # classification
     y_true = np.empty(0)
     y_score = torch.empty((0, n_classes))
@@ -70,6 +104,45 @@ def eval_result_classification(model, dataloader, device, n_classes): # classifi
         auroc = roc_auc_score(y_true, y_score, average='macro', multi_class='ovr')
     
     return accuracy, precision, recall, f1, auroc
+
+def eval_result_multitask_classification(model, dataloader, device, n_classes, index): # classification
+    y_true = np.empty(0)
+    y_score = torch.empty((0, n_classes))
+    y_pred = np.empty(0)
+
+    model.eval()
+    with torch.no_grad():
+        for x, *y_list, T, E in dataloader:
+            y_true = np.append(y_true, y_list[index])
+
+            x = x.to(device)
+
+            output = model(x)[index].detach().cpu()
+
+            y_score = torch.cat((y_score, output))
+            output = F.softmax(output, dim=1).argmax(1)
+
+            y_pred = np.append(y_pred, output.numpy())
+
+    y_true = torch.IntTensor(y_true)
+    y_score = F.softmax(y_score, dim=1)
+    y_pred = torch.IntTensor(y_pred)
+
+    accuracy = accuracy_score(y_true, y_pred)
+    precision = precision_score(y_true, y_pred, average='macro')
+    recall = recall_score(y_true, y_pred, average='macro')
+    f1 = f1_score(y_true, y_pred, average='macro')
+    if n_classes == 2:
+        auroc = roc_auc_score(y_true, y_score[:, 1])
+    else:
+        auroc = roc_auc_score(y_true, y_score, average='macro', multi_class='ovr')
+
+    return accuracy, precision, recall, f1, auroc
+
+def print_save_result_classification(model, dataloader, device, log, dataset_type, n_classes):
+    accuracy, precision, recall, f1, auroc = eval_result_classification(model, dataloader, device, n_classes)
+    log.write(f'[{dataset_type:^10s}] Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}, AUROC: {auroc:.4f}\n')
+    print(f'[{dataset_type:^10s}] Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}, AUROC: {auroc:.4f}')
 
 def predict(score, num_times): # survival
     Triangle1 = np.tri(num_times, num_times + 1)
@@ -152,3 +225,60 @@ def eval_result_survival(model, dataloader, device, num_times, times): # surviva
     IBS = ibs(score, T_true, E_true, num_times, times)
     
     return C_Index, IBS
+
+def eval_result_multitask_survival(model, dataloader, device, num_times, times, index):
+    y_true = np.empty((0, num_times + 1))
+    T_true = np.empty(0)
+    E_true = np.empty(0)
+    score = np.empty((0, num_times))
+
+    model.eval()
+    with torch.no_grad():
+        for x, *y_list, T, E in dataloader:
+            y_true = np.append(y_true, y_list[index])
+            T_true = np.append(T_true, T)
+            E_true = np.append(E_true, E)
+
+            x = x.to(device)
+
+            output = model(x)[index].detach().cpu().numpy()
+
+            score = np.append(score, output, axis=0)
+
+    C_Index = c_index(score, T_true, E_true, num_times)
+    IBS = ibs(score, T_true, E_true, num_times, times)
+
+    return C_Index, IBS
+
+def print_save_result_survival(model, dataloader, device, log, dataset_type, num_times, times):
+    C_Index, IBS = eval_result_survival(model, dataloader, device, num_times, times)
+    log.write(f'[{dataset_type:^10s}] C-Index: {C_Index:.4f}, IBS: {IBS:.4f}\n')
+    print(f'[{dataset_type:^10s}] C-Index: {C_Index:.4f}, IBS: {IBS:.4f}')
+
+
+
+def print_save_result_multitask(model, dataloader, device, log, dataset_type,
+                      task_name_dict, d_output_dict, num_times, times, flag_survival):
+    idx = 0
+    if 'regression' in task_name_dict.keys():
+        for name in task_name_dict['regression']:
+            MAE, RMSE, PCC, SCC = eval_result_regression(model, dataloader, device, idx)
+            log.write(f'[{name:^17s}] [{dataset_type:^10s}] MAE: {MAE:.4f}, RMSE: {RMSE:.4f}, PCC: {PCC:.4f}, SCC: {SCC:.4f}\n')
+            print(f'[{name:^17s}] [{dataset_type:^10s}] MAE: {MAE:.4f}, RMSE: {RMSE:.4f}, PCC: {PCC:.4f}, SCC: {SCC:.4f}')
+            idx += 1
+
+    if 'classification' in task_name_dict.keys():
+        for name in task_name_dict['classification']:
+            n_classes = d_output_dict[name]
+            accuracy, precision, recall, f1, auroc = eval_result_classification(model, dataloader, device, n_classes, idx) # classification
+            log.write(f'[{name:^17s}] [{dataset_type:^10s}] Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}, AUROC: {auroc:.4f}\n') # classification
+            print(f'[{name:^17s}] [{dataset_type:^10s}] Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}, AUROC: {auroc:.4f}') # classification
+            idx += 1
+
+    if flag_survival:
+        name = 'survival'
+        C_Index, IBS = eval_result_survival(model, dataloader, device, num_times, times, idx) # survival
+        log.write(f'[{name:^17s}] [{dataset_type:^10s}] C-Index: {C_Index:.4f}, IBS: {IBS:.4f}\n') # survival
+        print(f'[{name:^17s}] [{dataset_type:^10s}] C-Index: {C_Index:.4f}, IBS: {IBS:.4f}') # survival
+
+    print('\n')

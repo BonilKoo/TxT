@@ -60,7 +60,7 @@ class Transformer(nn.Module):
         
         return e_outputs
 
-class CustomModel(nn.Module):
+class TxT(nn.Module):
     def __init__(self, embed_file, gene_list, device,
                  n_heads=8, d_model=512, dropout=0.1, d_ff=2048, norm_first=False, n_layers=6,
                  aggfunc='Flatten', d_hidden1=128, d_hidden2=64, slope=0.2, d_output_dict=None):
