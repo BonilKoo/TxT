@@ -15,27 +15,27 @@ from utils import *
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--network_file', required=True)
-    parser.add_argument('--result_dir', required=True)
+    parser.add_argument('--network_file', required=True, help='(csv) A network file representing relationships between genes.')
+    parser.add_argument('--result_dir', required=True, help='(dir) A directory to save output files.')
 
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--val_ratio', type=float, default=0.05)
     parser.add_argument('--test_ratio', type=float, default=0.1)
-    parser.add_argument('--device', type=int, default=0)
+    parser.add_argument('--device', type=int, default=0, help='(int) Device number.')
     
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--lr', type=float, default=0.01)
     parser.add_argument('--patience', type=int, default=10)
     parser.add_argument('--max_epoch', type=int, default=100)
 
-    parser.add_argument('--embedding_dim', type=int, default=64)
+    parser.add_argument('--embedding_dim', type=int, default=64, help='(int) The size of each embedding vector.')
     parser.add_argument('--walk_length', type=int, default=20)
     parser.add_argument('--context_size', type=int, default=10)
     parser.add_argument('--walks_per_node', type=int, default=10)
     parser.add_argument('--num_negative_samples', type=int, default=1)
     parser.add_argument('--p', type=float, default=1)
     parser.add_argument('--q', type=float, default=1)
-    parser.add_argument('--sparse', action='store_true')
+    parser.add_argument('--sparse', action='store_true', help='An option to control the memory efficiency of storing random walks.')
 
     return parser.parse_args()
 

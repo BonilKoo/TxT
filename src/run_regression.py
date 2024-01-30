@@ -5,10 +5,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from datasets import RegressionDataset, load_dataset
-from evaluation import eval_result_regression, print_save_result_regression
-from models import TxT
-from utils import *
+from datasets.datasets import RegressionDataset, load_dataset
+from utils.evaluation import eval_result_regression, print_save_result_regression
+from models.models import TxT
+from utils.utils import *
 
 def parse_args():
     parser = argparse.ArgumentParser()

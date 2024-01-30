@@ -44,11 +44,13 @@ class RegressionDataset(Dataset):
         self.y = df.iloc[:, -1].values
         
         self.length = len(df)
+        
+        self.d_output_dict = {'task': 1}
     
     def __getitem__(self, index):
         x = torch.FloatTensor(self.x[index])
         y = torch.FloatTensor([self.y[index]])
-        return x, y
+        return x, y, [0], [0]
     
     def __len__(self):
         return self.length
@@ -73,6 +75,8 @@ class ClassificationDataset(Dataset):
         self.y = list(map(self.label_to_vector, self.y))
         
         self.length = len(df)
+        
+        self.d_output_dict = {'task': self.n_classes}
     
     def label_to_vector(self, value):
         return self.label_dict.get(value, None)
@@ -80,7 +84,7 @@ class ClassificationDataset(Dataset):
     def __getitem__(self, index):
         x = torch.FloatTensor(self.x[index])
         y = torch.LongTensor(self.y)[index]
-        return x, y
+        return x, y, [0], [0]
     
     def __len__(self):
         return self.length
@@ -105,6 +109,8 @@ class SurvivalDataset(Dataset):
         self.y = self.compute_Y(self.T, self.E, is_min_time_zero, extra_pct_time)
         
         self.length = len(df)
+        
+        self.d_output_dict = {'task': self.num_times}
     
     def label_to_vector(self, value):
         return self.label_dict.get(value, None)
@@ -312,7 +318,7 @@ class MultitaskDataset(Dataset):
     def __len__(self):
         return self.length
 
-def load_dataset(input_file, output_file, val_ratio, test_ratio, scaler, batch_size, task, n_time_intervals=64, task_file=None):
+def load_dataset(input_file, output_file, task, val_ratio=0.1, test_ratio=0.2, scaler='MinMax', batch_size=64, n_time_intervals=64, task_file=None):
     if task == 'regression':
         dataset = RegressionDataset(input_file, output_file)
     elif task == 'classification':

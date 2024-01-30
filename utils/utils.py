@@ -16,7 +16,12 @@ def rmfile(file_name):
     if os.path.exists(file_name):
         os.system(f'rm -f {file_name}')
 
-def save_args(args):
+def check_args(args):
+    if args.task == 'multitask' and args.task_file is None:
+        raise ValueError('--task_file is required for multi-task learning.')
+    assert 0 <= args.val_ratio < 1, '0 ≤ --val_ratio < 1'
+    assert 0 <= args.test_ratio < 1, '0 ≤ --test_ratio < 1'
+    
     mkdir(args.result_dir)
     args_df = pd.DataFrame(vars(args), index=['value'])
     args_df.columns.name = 'argument'
