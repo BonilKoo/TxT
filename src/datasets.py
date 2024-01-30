@@ -311,7 +311,7 @@ class MultitaskDataset(Dataset):
     def __len__(self):
         return self.length
 
-def load_dataset(input_file, output_file, task_file, val_ratio, test_ratio, scaler, batch_size, task, n_time_intervals):
+def load_dataset(input_file, output_file, val_ratio, test_ratio, scaler, batch_size, task, n_time_intervals=64, task_file=None):
     if task == 'regression':
         dataset = RegressionDataset(input_file, output_file)
     elif task == 'classification':

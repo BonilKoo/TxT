@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 
 from datasets import MultitaskDataset, load_dataset
+from models import TxT
 from utils import *
 
 def parse_args():
@@ -49,7 +50,7 @@ def parse_args():
 def run(args):
     set_seed(args.seed)
 
-    train_dataloader, val_dataloader, test_dataloader, gene_list = load_dataset(args.input_file, args.output_file, args.task_file, args.val_ratio, args.test_ratio, args.scaler, args.batch_size, args.n_time_intervals)
+    train_dataloader, val_dataloader, test_dataloader, gene_list = load_dataset(args.input_file, args.output_file, args.val_ratio, args.test_ratio, args.scaler, args.batch_size, task='multitask', n_time_intervals=args.n_time_intervals, task_file=args.task_file)
 
     device = torch.device(f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu')
 

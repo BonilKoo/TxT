@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 import torch
+import torch.nn as nn
 
 def mkdir(dir_name):
     os.makedirs(dir_name, exist_ok=True)

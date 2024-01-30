@@ -1,5 +1,10 @@
 from utils import get_clones
 
+import torch.nn as nn
+
+from embed import *
+from layers import EncoderLayer
+
 class Encoder(nn.Module):
     def __init__(self, embed_file, gene_list, device,
                  n_heads=8, d_model=512, dropout=0.1, d_ff=2048, norm_first=False, n_layers=6):
@@ -64,7 +69,7 @@ class TxT(nn.Module):
     def __init__(self, embed_file, gene_list, device,
                  n_heads=8, d_model=512, dropout=0.1, d_ff=2048, norm_first=False, n_layers=6,
                  aggfunc='Flatten', d_hidden1=128, d_hidden2=64, slope=0.2, d_output_dict=None):
-        super(CustomModel, self).__init__()
+        super(TxT, self).__init__()
 
         self.transformer = Transformer(embed_file, gene_list, device,
                                        n_heads, d_model, dropout, d_ff, norm_first, n_layers)

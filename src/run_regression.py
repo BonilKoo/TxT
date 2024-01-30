@@ -7,6 +7,7 @@ import torch.nn as nn
 
 from datasets import RegressionDataset, load_dataset
 from evaluation import eval_result_regression
+from models import TxT
 from utils import *
 
 def parse_args():
@@ -48,7 +49,7 @@ def parse_args():
 def run(args):
     set_seed(args.seed)
     
-    train_dataloader, val_dataloader, test_dataloader, gene_list = load_dataset(args.input_file, args.output_file, args.val_ratio, args.test_ratio, args.scaler, args.batch_size)
+    train_dataloader, val_dataloader, test_dataloader, gene_list = load_dataset(args.input_file, args.output_file, args.val_ratio, args.test_ratio, args.scaler, args.batch_size, task='regression')
     
     device = torch.device(f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu')
     

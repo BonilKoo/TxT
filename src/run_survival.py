@@ -7,6 +7,7 @@ import torch.nn as nn
 
 from datasets import SurvivalDataset, load_dataset
 from evaluation import eval_result_survival
+from models import TxT
 from utils import *
 
 def parse_args():
@@ -49,7 +50,7 @@ def parse_args():
 def run(args):
     set_seed(args.seed)
     
-    train_dataloader, val_dataloader, test_dataloader, gene_list = load_dataset(args.input_file, args.output_file, args.val_ratio, args.test_ratio, args.scaler, args.batch_size, args.n_time_intervals)
+    train_dataloader, val_dataloader, test_dataloader, gene_list = load_dataset(args.input_file, args.output_file, args.val_ratio, args.test_ratio, args.scaler, args.batch_size, task='survival', n_time_intervals=args.n_time_intervals)
     num_times = train_dataloader.dataset.dataset.num_times
     time_buckets = train_dataloader.dataset.dataset.time_buckets
     times = train_dataloader.dataset.dataset.times
