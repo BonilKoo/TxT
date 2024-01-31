@@ -197,6 +197,8 @@ def run(args):
 def main():
     args = parse_args()
     check_args(args)
+    save_args(args)
+    
     run(args)
 
 if __name__ == '__main__':
