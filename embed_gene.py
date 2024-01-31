@@ -8,9 +8,9 @@ import torch
 
 from torch_geometric.nn import Node2Vec
 
-from evaluation import eval_result_node2vec
-from datasets import load_network
-from utils import *
+from datasets.datasets import load_network
+from utils.evaluation import eval_result_node2vec
+from utils.utils import *
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -18,24 +18,24 @@ def parse_args():
     parser.add_argument('--network_file', required=True, help='(csv) A network file representing relationships between genes.')
     parser.add_argument('--result_dir', required=True, help='(dir) A directory to save output files.')
 
-    parser.add_argument('--seed', type=int, default=42)
-    parser.add_argument('--val_ratio', type=float, default=0.05)
-    parser.add_argument('--test_ratio', type=float, default=0.1)
-    parser.add_argument('--device', type=int, default=0, help='(int) Device number.')
+    parser.add_argument('--seed', type=int, default=42, help='(int) Seed for random number generation, ensuring reproducibility of results. (default: 42)')
+    parser.add_argument('--val_ratio', type=float, default=0.05, help='(float) Ratio of data to use for validation. (default: 0.05)')
+    parser.add_argument('--test_ratio', type=float, default=0.1, help='(float) Ratio of data to use for testing. (default: 0.1)')
+    parser.add_argument('--device', type=int, default=0, help='(int) Device number. (default: 0)')
     
-    parser.add_argument('--batch_size', type=int, default=128)
-    parser.add_argument('--lr', type=float, default=0.01)
-    parser.add_argument('--patience', type=int, default=10)
-    parser.add_argument('--max_epoch', type=int, default=100)
+    parser.add_argument('--batch_size', type=int, default=128, help='(int) Batch size for training, validation, and test sets. (default: 128)')
+    parser.add_argument('--lr', type=float, default=0.01, help='(float) Learning rate for the optimizer. (default: 0.01)')
+    parser.add_argument('--patience', type=int, default=10, help='(int) Number of epochs with no improvement in validation accuracy after which training will be stopped early. (default: 10)')
+    parser.add_argument('--max_epoch', type=int, default=100, help='(int) Maximum number of training epochs. (default: 100)')
 
-    parser.add_argument('--embedding_dim', type=int, default=64, help='(int) The size of each embedding vector.')
-    parser.add_argument('--walk_length', type=int, default=20)
-    parser.add_argument('--context_size', type=int, default=10)
-    parser.add_argument('--walks_per_node', type=int, default=10)
-    parser.add_argument('--num_negative_samples', type=int, default=1)
-    parser.add_argument('--p', type=float, default=1)
-    parser.add_argument('--q', type=float, default=1)
-    parser.add_argument('--sparse', action='store_true', help='An option to control the memory efficiency of storing random walks.')
+    parser.add_argument('--embedding_dim', type=int, default=64, help='(int) The size of each embedding vector. (default: 64)')
+    parser.add_argument('--walk_length', type=int, default=20, help='(int) Length of the random walk per node. (default: 20)')
+    parser.add_argument('--context_size', type=int, default=10, help='(int) Size of the context window. (default: 10)')
+    parser.add_argument('--walks_per_node', type=int, default=10, help='(int) Number of random walks to start from each node. (default: 10)')
+    parser.add_argument('--num_negative_samples', type=int, default=1, help='(int) Number of negative samples for each positive sample. (default: 1)')
+    parser.add_argument('--p', type=float, default=1, help='(float) Likelihood of immediately revisiting a node in the walk. (default: 1)')
+    parser.add_argument('--q', type=float, default=1, help='(float) Control parameter to interpolate between breadth-first strategy and depth-first strategy. (default: 1)')
+    parser.add_argument('--sparse', action='store_true', help='An option to control the memory efficiency of storing random walks. (default: False)')
 
     return parser.parse_args()
 
