@@ -49,8 +49,8 @@ class RegressionDataset(Dataset):
     
     def __getitem__(self, index):
         x = torch.FloatTensor(self.x[index])
-        y = torch.FloatTensor([self.y[index]])
-        return x, y, [0], [0]
+        y = [torch.FloatTensor([self.y[index]])]
+        return x, *y, [0], [0]
     
     def __len__(self):
         return self.length
@@ -83,8 +83,8 @@ class ClassificationDataset(Dataset):
     
     def __getitem__(self, index):
         x = torch.FloatTensor(self.x[index])
-        y = torch.LongTensor(self.y)[index]
-        return x, y, [0], [0]
+        y = [torch.LongTensor(self.y)[index]]
+        return x, *y, [0], [0]
     
     def __len__(self):
         return self.length
@@ -155,10 +155,10 @@ class SurvivalDataset(Dataset):
     
     def __getitem__(self, index):
         x = torch.FloatTensor(self.x[index])
-        y = torch.FloatTensor(self.y[index])
+        y = [torch.FloatTensor(self.y[index])]
         T = torch.FloatTensor(self.T)[index]
         E = torch.LongTensor(self.E)[index]
-        return x, y, T, E
+        return x, *y, T, E
     
     def __len__(self):
         return self.length

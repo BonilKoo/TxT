@@ -4,9 +4,9 @@ import random
 import torch
 import torch.nn as nn
 
-from utils import SurvivalLoss
+from utils.utils import SurvivalLoss
 
-def PCGrad_backward(optimizer, outputs, y_list, n_tasks, idx_task_dict, flag_survival, E, Triangle, device): # PCGrad
+def PCGrad_backward(optimizer, outputs, y_list, n_tasks, idx_task_dict, flag_survival, E, Triangle, device, val_flag): # PCGrad
     '''Code based on: https://github.com/wgchang/PCGrad-pytorch-example/blob/master/pcgrad-example.py'''
     criterion_regression = nn.MSELoss()
     criterion_classification = nn.CrossEntropyLoss()
@@ -29,6 +29,10 @@ def PCGrad_backward(optimizer, outputs, y_list, n_tasks, idx_task_dict, flag_sur
         else:
             loss = SurvivalLoss(outputs[idx], y_list[idx], E, Triangle)
         loss_list.append(loss)
+        
+        if val_flag:
+            return loss_list
+        
         # 1
         loss.backward(retain_graph=True)
 

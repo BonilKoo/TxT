@@ -68,6 +68,10 @@ def run(args):
         flag_survival = train_dataloader.dataset.dataset.flag_survival
         n_tasks = train_dataloader.dataset.dataset.n_tasks # PCGrad
         idx_task_dict = train_dataloader.dataset.dataset.idx_task_dict # PCGrad
+    elif args.task == 'survival':
+        flag_survival = 1
+    else:
+        flag_survival = 0
     
     model = TxT(args.embed_file, gene_list, device,
                         args.n_heads, args.d_model, args.dropout, args.d_ff, args.norm_first, args.n_layers,
@@ -98,18 +102,29 @@ def run(args):
     def train():
         model.train()
         total_loss = 0
-        for x, y, T, E in train_dataloader:
+#         for x, y, T, E in train_dataloader:
+        for x, *y_list, T, E in train_dataloader:
             x = x.to(device)
-            y = y.to(device)
+#             y = y.to(device)
+            y_list = [y.to(device) for y in y_list]
             
-            output = model(x)[0]
+#             output = model(x)[0]
+            outputs = model(x)
             if args.task in ['regression', 'classification']:
-                loss = criterion(output, y)
+#                 loss = criterion(output, y)
+                loss = criterion(outputs[0], y_list[0])
             elif args.task == 'survival':
-                loss = SurvivalLoss(output, y, E, Triangle) # survival
+#                 loss = SurvivalLoss(output, y, E, Triangle) # survival
+                loss = SurvivalLoss(outputs[0], y_list[0], E, Triangle) # survival
+            elif args.task == 'multitask':
+                loss_list = PCGrad_backward(optimizer, outputs, y_list, n_tasks, idx_task_dict, flag_survival, E, Triangle, device, False) # PCGrad
+                loss = sum(loss_list)
+            else:
+                raise NotImplementedError
             
-            optimizer.zero_grad()
-            loss.backward()
+            if args.task != 'multitask':
+                optimizer.zero_grad()
+                loss.backward()
             optimizer.step()
             
             total_loss += loss.item() * x.size(0)
@@ -119,15 +134,23 @@ def run(args):
     def test():
         model.eval()
         total_loss = 0
-        for x, y, T, E in val_dataloader:
+#         for x, y, T, E in val_dataloader:
+        for x, *y_list, T, E in val_dataloader:
             x = x.to(device)
-            y = y.to(device)
+#             y = y.to(device)
+            y_list = [y.to(device) for y in y_list]
             
-            output = model(x)[0]
+#             output = model(x)[0]
+            outputs = model(x)
             if args.task in ['regression', 'classification']:
-                loss = criterion(output, y)
+#                 loss = criterion(output, y)
+                loss = criterion(outputs[0], y_list[0])
             elif args.task == 'survival':
-                loss = SurvivalLoss(output, y, E, Triangle) # survival
+#                 loss = SurvivalLoss(output, y, E, Triangle) # survival
+                loss = SurvivalLoss(outputs[0], y_list[0], E, Triangle) # survival
+            elif args.task == 'multitask':
+                loss_list = PCGrad_backward(optimizer, outputs, y_list, n_tasks, idx_task_dict, flag_survival, E, Triangle, device, True) # PCGrad
+                loss = sum(loss_list)
             
             total_loss += loss.item() * x.size(0)
         return total_loss / len(val_dataloader.dataset)
@@ -161,12 +184,15 @@ def run(args):
             print(f'Stop training because the training loss or validation loss is nan.')
             break
     
-    print(f'\nLog file is saved to {loss_file}.')
+    print(f'\nLoss is saved to {loss_file}.')
     f.close()
     print(f'Model is saved to {model_file}.\n')
     model = load_best_model(model, model_file, device)
     
-    print_save_result(model=model, dataloaders=[train_dataloader,val_dataloader,test_dataloader], device=device, result_dir=args.result_dir, task=args.task, val_ratio=args.val_ratio, num_times=num_times, times=times)
+    if args.task != 'multitask':
+        print_save_result(model=model, dataloaders=[train_dataloader,val_dataloader,test_dataloader], device=device, result_dir=args.result_dir, task=args.task, val_ratio=args.val_ratio, num_times=num_times, times=times)
+    else:
+        print_save_result_multitask(model=model, dataloaders=[train_dataloader,val_dataloader,test_dataloader], device=device, result_dir=args.result_dir, val_ratio=args.val_ratio, task_name_dict=task_name_dict, d_output_dict=d_output_dict, num_times=num_times, times=times, flag_survival=flag_survival)
 
 def main():
     args = parse_args()
@@ -175,3 +201,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

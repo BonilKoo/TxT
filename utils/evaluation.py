@@ -283,31 +283,54 @@ def print_save_result_survival(model, dataloader, device, dataset_type, result_d
     print(f'[{dataset_type:^10s}] C-Index: {C_Index:.4f}, IBS: {IBS:.4f}')
     log.close()
 
-def print_save_result_multitask(model, dataloader, device, log, dataset_type,
+def print_save_result_multitask(model, dataloaders, device, result_dir, val_ratio,
                       task_name_dict, d_output_dict, num_times, times, flag_survival):
-    idx = 0
-    if 'regression' in task_name_dict.keys():
-        for name in task_name_dict['regression']:
-            MAE, RMSE, PCC, SCC = eval_result_multitask_regression(model, dataloader, device, idx)
-            log.write(f'[{name:^17s}] [{dataset_type:^10s}] MAE: {MAE:.4f}, RMSE: {RMSE:.4f}, PCC: {PCC:.4f}, SCC: {SCC:.4f}\n')
-            print(f'[{name:^17s}] [{dataset_type:^10s}] MAE: {MAE:.4f}, RMSE: {RMSE:.4f}, PCC: {PCC:.4f}, SCC: {SCC:.4f}')
-            idx += 1
+    dataset_types = ['Training', 'Validation', 'Test']    
+    for dataloader, dataset_type in zip(dataloaders, dataset_types):
+        if dataset_type == 'Validation' and val_ratio == 0:
+            continue
+        
+        idx = 0
+        if 'regression' in task_name_dict.keys():
+            for name in task_name_dict['regression']:
+                if not os.path.exists(f'{result_dir}/performance_{name}.csv'):
+                    log = open(f'{result_dir}/performance_{name}.csv', 'w')
+                    log.write('Dataset,MAE,RMSE,PCC,SCC\n')
+                else:
+                    log = open(f'{result_dir}/performance_{name}.csv', 'a')
+                MAE, RMSE, PCC, SCC = eval_result_multitask_regression(model, dataloader, device, idx)
+                log.write(f'{dataset_type},{MAE:.4f},{RMSE:.4f},{PCC:.4f},{SCC:.4f}\n')
+                print(f'[{name:^17s}] [{dataset_type:^10s}] MAE: {MAE:.4f}, RMSE: {RMSE:.4f}, PCC: {PCC:.4f}, SCC: {SCC:.4f}')
+                log.close()
+                idx += 1
 
-    if 'classification' in task_name_dict.keys():
-        for name in task_name_dict['classification']:
-            n_classes = d_output_dict[name]
-            accuracy, precision, recall, f1, auroc = eval_result_multitask_classification(model, dataloader, device, n_classes, idx) # classification
-            log.write(f'[{name:^17s}] [{dataset_type:^10s}] Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}, AUROC: {auroc:.4f}\n') # classification
-            print(f'[{name:^17s}] [{dataset_type:^10s}] Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}, AUROC: {auroc:.4f}') # classification
-            idx += 1
+        if 'classification' in task_name_dict.keys():
+            for name in task_name_dict['classification']:
+                if not os.path.exists(f'{result_dir}/performance_{name}.csv'):
+                    log = open(f'{result_dir}/performance_{name}.csv', 'w')
+                    log.write('Dataset,Accuracy,Precision,Recall,F1,AUROC\n')
+                else:
+                    log = open(f'{result_dir}/performance_{name}.csv', 'a')
+                n_classes = d_output_dict[name]
+                accuracy, precision, recall, f1, auroc = eval_result_multitask_classification(model, dataloader, device, n_classes, idx) # classification
+                log.write(f'{dataset_type},{accuracy:.4f},{precision:.4f},{recall:.4f},{f1:.4f},{auroc:.4f}\n') # classification
+                print(f'[{name:^17s}] [{dataset_type:^10s}] Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}, AUROC: {auroc:.4f}') # classification
+                log.close()
+                idx += 1
 
-    if flag_survival:
-        name = 'survival'
-        C_Index, IBS = eval_result_multitask_survival(model, dataloader, device, num_times, times, idx) # survival
-        log.write(f'[{name:^17s}] [{dataset_type:^10s}] C-Index: {C_Index:.4f}, IBS: {IBS:.4f}\n') # survival
-        print(f'[{name:^17s}] [{dataset_type:^10s}] C-Index: {C_Index:.4f}, IBS: {IBS:.4f}') # survival
+        if flag_survival:
+            name = 'survival'
+            if not os.path.exists(f'{result_dir}/performance_{name}.csv'):
+                log = open(f'{result_dir}/performance_{name}.csv', 'w')
+                log.write('Dataset,C-Index,IBS\n')
+            else:
+                log = open(f'{result_dir}/performance_{name}.csv', 'a')
+            C_Index, IBS = eval_result_multitask_survival(model, dataloader, device, num_times, times, idx) # survival
+            log.write(f'{dataset_type},{C_Index:.4f},{IBS:.4f}\n') # survival
+            print(f'[{name:^17s}] [{dataset_type:^10s}] C-Index: {C_Index:.4f}, IBS: {IBS:.4f}') # survival
+            log.close()
 
-    print('\n')
+        print('\n')
 
 def print_save_result(model, dataloaders, device, result_dir, task, val_ratio, num_times, times):
     if task == 'regression':
