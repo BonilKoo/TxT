@@ -214,7 +214,7 @@ Only required for multi-task learning
 * Multi-task
 
     ```
-    python src/run_multi_task.py --task multitask --task_file <task_list.csv> \
+    python run_TxT.py --task multitask --task_file <task_list.csv> \
     --input_file <omics_profile.csv> --output_file <clinical_feature.csv> \
     --embed_file <gene_embedding.csv> --result_dir <result_dir> \
     --scaler [MinMax/Standard/None] --device <device> \
