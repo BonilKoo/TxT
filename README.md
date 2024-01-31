@@ -86,7 +86,7 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/embed_gene.py#L14) 
 
 ### 1) Input Data
 
-(1) *Omics profile*
+(1) *Omics Profile*
 
 * File type: CSV
 * Format overview:
@@ -100,7 +100,7 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/embed_gene.py#L14) 
     ...
     ```
 
-(2) *Clinical features*
+(2) *Clinical Feature*
 
 * File type: CSV
 * Format overview:
@@ -126,7 +126,7 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/embed_gene.py#L14) 
         ...
         ```
 
-    - Survival
+    - Survival Prediction
 
         ```
         Sample,OS_duration,OS_event
@@ -148,7 +148,7 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/embed_gene.py#L14) 
         ...
         ```
 
-(3) *gene embedding*
+(3) *Gene Embedding*
 
 * File type: CSV
 * Format overview:
@@ -161,7 +161,7 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/embed_gene.py#L14) 
     ...
     ```
 
-(4) *Task list*
+(4) *Task List*
 
 Only required for multi-task learning
 
@@ -201,7 +201,7 @@ Only required for multi-task learning
     --xavier_uniform --norm_first
     ```
 
-* Survival
+* Survival Prediction
 
     ```
     python run_TxT.py --task survival \
@@ -237,5 +237,7 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/run_TxT.py#L14) for
 
 *Outputs*
 
-- `log.txt`: A file encompassing record of training loss, validation loss, and performance metrics for each training, validation, and test set.
-- `model.pt`: A file for the trained model's learned parameters.
+- `performance.csv`: (csv) A file containing a summary of the model's performance on training, validation and test datasets.
+- `loss.csv`: (csv) A file containing a record of training and validation loss for each epoch.
+- `arguments.csv`: (csv) A csv file including the argument name and its corresponding value.
+- `TxT.pt`: A file for the trained model's learned parameters.
