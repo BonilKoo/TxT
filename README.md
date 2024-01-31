@@ -229,8 +229,8 @@ Only required for multi-task learning
 - `--output_file`: (csv) A file containing clinical feature data. The format is organized with a header line indicating the type of data and subsequent rows containing sample-specific information.
 - `--embed_file`: (csv) A csv file representing gene embedding. The gene names are listed in the first column, and the subsequent columns contain the embedding values for each gene in different dimensions.
 - `--result_dir`: (dir) A directory to save output files.
-- `--scaler`: (str) A data normalization method. You can choose among [MinMax/Standard/None]. The gene expression levels were normalized by using the expression values of the traning set.
-- `--device`: (int) Device number.
+- `--scaler`: (str) A data normalization method. You can choose among [MinMax/Standard/None]. The gene expression levels were normalized by using the expression values of the traning set (default: MinMax).
+- `--device`: (int) Device number (default: 0).
 - `--xavier_uniform`: An option to use Xavier Uniform initialization for model weights to prevent issues like vanishing or exploding gradients during the training process.
 - `--norm_first`: An option to perform LayerNorms before other attention and feedforward operations, otherwise after.
 
