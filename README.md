@@ -224,7 +224,7 @@ Only required for multi-task learning
 *Options*
 
 - `--task`: (str) The type of task to perform. Choose among [regression/classification/survival/multitask].
-- `--task_file`: (csv) Only required for multi-task learning. A tsv file that outlines a set of tasks. Each row in the file represents a specific task, and the information is organized into two columns: "task name" and "prediction type".
+- `--task_file`: (csv) Only required for multi-task learning. A csv file that outlines a set of tasks. Each row in the file represents a specific task, and the information is organized into two columns: "task name" and "prediction type".
 - `--input_file`: (csv) A omics profile file representing a gene expression dataset where each row corresponds to a sample, and each column, labeled with gene names, represents the expression level of the corresponding gene in the respective sample. The numerical values in the matrix indicate the expression levels of each gene in the corresponding samples.
 - `--output_file`: (csv) A file containing clinical feature data. The format is organized with a header line indicating the type of data and subsequent rows containing sample-specific information.
 - `--embed_file`: (csv) A csv file representing gene embedding. The gene names are listed in the first column, and the subsequent columns contain the embedding values for each gene in different dimensions.
