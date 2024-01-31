@@ -59,7 +59,7 @@ You can use other methods according to your need.
 ### 2) Training
 
 ```
-python src/embed_gene.py --network_file <network.csv> --result_dir <result_dir>
+python embed_gene.py --network_file <network.csv> --result_dir <result_dir>
     --embedding_dim <embedding_dim> --sparse --device <device>
 ```
 
