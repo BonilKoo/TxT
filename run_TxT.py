@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument('--val_ratio', type=float, default=0.1, help='(float) Ratio of data to use for validation. (default: 0.1)')
     parser.add_argument('--test_ratio', type=float, default=0.2, help='(float) Ratio of data to use for testing. (default: 0.2)')
     parser.add_argument('--scaler', choices=[None, 'MinMax', 'Standard'], default='MinMax', help='(str) A data normalization method. Choose among [MinMax/Standard/None]. The gene expression levels were normalized by using the expression values of the traning set. (default: MinMax)')
-    parser.add_argument('--batch_size', type=int, default=64, help='(int) Batch size for training, validation, and test sets. (default: 64))
+    parser.add_argument('--batch_size', type=int, default=64, help='(int) Batch size for training, validation, and test sets. (default: 64)')
     parser.add_argument('--n_time_intervals', type=int, default=64, help='(int) Number of time intervals for survival prediction. (default: 64)') # survival
     
     parser.add_argument('--device', type=int, default=0, help='(int) Device number.')
@@ -39,7 +39,7 @@ def parse_args():
     parser.add_argument('--dropout', type=float, default=0.1, help='(float) Dropout rate. (default: 0.1)')
     parser.add_argument('--d_ff', type=int, default=256, help='(int) Dimensionality of the feed-forward layer. (default: 256)')
     parser.add_argument('--norm_first', action='store_true', help='An option to perform LayerNorms before other attention and feedforward operations, otherwise after. (default: False)')
-    parser.add_argument('--n_layers', type=int, default=2 help='(int) Number of layers in transformer. (default: 2)')
+    parser.add_argument('--n_layers', type=int, default=2, help='(int) Number of layers in transformer. (default: 2)')
 
     parser.add_argument('--aggfunc', choices=['Flatten', 'Avgpool'], default='Flatten', help='(str) Aggregation function after transformer module. Choose between [Flatten/Avgpool]. (default: Flatten)')
     parser.add_argument('--d_hidden1', type=int, default=128, help='(int) Dimensionality of the first hidden layer in task-specific layer. (default: 128)')
