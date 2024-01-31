@@ -175,34 +175,41 @@ Only for multi-task learning
 * Regression
 
     ```
-    python src/run_regression.py --input_file <omics_profile.csv> --output_file <clinical_feature.tsv>
-    --embed_file <gene_embedding.csv> --result_dir <resuir_dir> --scaler [MinMax/Standard/None]
-    --device <device> --xavier_uniform --norm_first
+    python run_TxT.py --task regression \
+    --input_file <omics_profile.csv> --output_file <clinical_feature.tsv> \
+    --embed_file <gene_embedding.csv> --result_dir <resuir_dir> \
+    --scaler [MinMax/Standard/None] --device <device> \
+    --xavier_uniform --norm_first
     ```
 
 * Classification
 
     ```
-    python src/run_classification.py --input_file <omics_profile.csv> --output_file <clinical_feature.tsv>
-    --embed_file <gene_embedding.csv> --result_dir <result_dir> --scaler [MinMax/Standard/None]
-    --device <device> --xavier_uniform --norm_first
+    python run_TxT.py --task classification \
+    --input_file <omics_profile.csv> --output_file <clinical_feature.tsv> \
+    --embed_file <gene_embedding.csv> --result_dir <result_dir> \
+    --scaler [MinMax/Standard/None] --device <device> \
+    --xavier_uniform --norm_first
     ```
 
 * Survival
 
     ```
-    python src/run_survival.py --input_file <omics_profile.csv> --output_file <clinical_feature.tsv>
-    --embed_file <gene_embedding.csv> --result_dir <result_dir> --scaler [MinMax/Standard/None]
-    --device <device> --xavier_uniform --norm_first
+    python run_TxT.py --task survival \
+    --input_file <omics_profile.csv> --output_file <clinical_feature.tsv> \
+    --embed_file <gene_embedding.csv> --result_dir <result_dir> \
+    --scaler [MinMax/Standard/None] --device <device> \
+    --xavier_uniform --norm_first
     ```
 
 * Multi-task
 
     ```
-    python src/run_multi_task.py --input_file <omics_profile.csv> --output_file <clinical_feature.tsv>
-    --embed_file <gene_embedding.csv> --result_dir <result_dir> --scaler [MinMax/Standard/None]
-    --device <device> --xavier_uniform --norm_first
-    --task_file <task_list.tsv>
+    python src/run_multi_task.py --task multitask --task_file <task_list.tsv> \
+    --input_file <omics_profile.csv> --output_file <clinical_feature.tsv> \
+    --embed_file <gene_embedding.csv> --result_dir <result_dir> \
+    --scaler [MinMax/Standard/None] --device <device> \
+    --xavier_uniform --norm_first
     ```
 
 *Options*
