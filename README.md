@@ -167,7 +167,7 @@ Only required for multi-task learning
 
 * File type: CSV
 * Format overview:
-    - Multi-task
+    - Multi-task Learning
 
         ```
         name,task
