@@ -67,9 +67,9 @@ python embed_gene.py --network_file <network.csv> --result_dir <result_dir> \
 
 - `--network_file`: (csv) A network file representing relationships between genes.
 - `--result_dir`: (dir) A directory to save output files.
-- `--embedding_dim`: (int) The size of each embedding vector.
+- `--embedding_dim`: (int) The size of each embedding vector (default: 64).
 - `--sparse`: An option to control the memory efficiency of storing random walks.
-- `--device`: (int) Device number.
+- `--device`: (int) Device number (default: 0).
 
 Check the [script](https://github.com/BonilKoo/TxT/blob/main/embed_gene.py#L15) for other options.
 
