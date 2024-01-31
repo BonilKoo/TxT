@@ -8,7 +8,7 @@ from sksurv.metrics import concordance_index_censored, integrated_brier_score
 import torch
 import torch.nn.functional as F
 
-def eval_result_node2vec(model, data, clf):
+def eval_node2vec(model, data, clf):
     model.eval()
     with torch.no_grad():
         z = model()
@@ -18,6 +18,16 @@ def eval_result_node2vec(model, data, clf):
         acc = clf.score(z, y)
         auc = roc_auc_score(y, clf.predict_proba(z)[:,1])
         return acc, auc
+
+def save_node2vec_result(model, data, clf, result_dir):
+    train_acc, train_auc = eval_node2vec(model, data[0], clf)
+    val_acc, val_auc = eval_node2vec(model, data[1], clf)
+    test_acc, test_auc = eval_node2vec(model, data[2], clf)
+    with open(os.path.join(result_dir, 'performance.csv'), 'w') as f:
+        f.write('Dataset,Accuracy,AUROC\n')
+        f.write(f'Training,{train_acc:.4f},{train_auc:.4f}\n')
+        f.write(f'Validation,{val_acc:.4f},{val_auc:.4f}\n')
+        f.write(f'Test,{test_acc:.4f},{test_auc:.4f}\n')
 
 def eval_result_regression(model, dataloader, device):
     y_true = np.empty(0)

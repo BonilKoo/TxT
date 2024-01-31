@@ -1,5 +1,6 @@
 import argparse
 import joblib
+import os
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
@@ -8,9 +9,8 @@ import torch
 
 from torch_geometric.nn import Node2Vec
 
-from datasets.datasets import load_network
-from utils.evaluation import eval_result_node2vec
-from utils.utils import *
+from datasets import datasets
+from utils import evaluation, utils
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -19,9 +19,9 @@ def parse_args():
     parser.add_argument('--result_dir', required=True, help='(dir) A directory to save output files.')
 
     parser.add_argument('--seed', type=int, default=42, help='(int) Seed for random number generation, ensuring reproducibility of results. (default: 42)')
+    parser.add_argument('--device', type=int, default=0, help='(int) Device number. (default: 0)')
     parser.add_argument('--val_ratio', type=float, default=0.05, help='(float) Ratio of data to use for validation. (default: 0.05)')
     parser.add_argument('--test_ratio', type=float, default=0.1, help='(float) Ratio of data to use for testing. (default: 0.1)')
-    parser.add_argument('--device', type=int, default=0, help='(int) Device number. (default: 0)')
     
     parser.add_argument('--batch_size', type=int, default=128, help='(int) Batch size for training, validation, and test sets. (default: 128)')
     parser.add_argument('--lr', type=float, default=0.01, help='(float) Learning rate for the optimizer. (default: 0.01)')
@@ -40,10 +40,11 @@ def parse_args():
     return parser.parse_args()
 
 def run(args):
-    set_seed(args.seed)
+    utils.set_seed(args.seed)
     device = torch.device(f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu')
     
-    gene_list, train_data, val_data, test_data = load_network(args.network_file, args.val_ratio, args.test_ratio)
+    gene_list, train_data, val_data, test_data = datasets.load_network(args.network_file,
+                                                                       args.val_ratio, args.test_ratio)
     
     model = Node2Vec(train_data.edge_index, embedding_dim=args.embedding_dim, walk_length=args.walk_length,
                      context_size=args.context_size, walks_per_node=args.walks_per_node,
@@ -82,36 +83,35 @@ def run(args):
         
         return clf, val_acc, val_auc
 
-    node2vec_model_file = f'{args.result_dir}/node2vec_model.pt'
-    clf_file = f'{args.result_dir}/link_prediction.joblib'
-    log_file = f'{args.result_dir}/log.txt'
+    node2vec_model_file = os.path.join(args.result_dir, 'node2vec_model.pt')
+    clf_file = os.path.join(args.result_dir, 'link_prediction.joblib')
+    log_file = os.path.join(args.result_dir, 'loss.csv')
     f = open(log_file, 'w')
+    f.write('Epoch,Training Loss,Validation Accuracy,Validation AUROC\n')
     
-    early_stopping = EarlyStopping_node2vec(patience=args.patience, path_model=node2vec_model_file, path_clf=clf_file)
+    early_stopping = utils.EarlyStopping_node2vec(patience=args.patience, path_model=node2vec_model_file, path_clf=clf_file)
 
     for epoch in range(1, args.max_epoch+1):
         loss = train()
         clf, val_acc, val_auc = test()
         print(f'Epoch: {epoch:02d}, Training Loss: {loss:.4f}, Validation Accuracy: {val_acc:.4f}, Validation AUROC: {val_auc:.4f}')
-        f.write(f'Epoch: {epoch:02d}, Training Loss: {loss:.4f}, Validation Accuracy: {val_acc:.4f}, Validation AUROC: {val_auc:.4f}\n')
+        f.write(f'{epoch},{loss:.4f},{val_acc:.4f},{val_auc:.4f}\n')
 
         early_stopping(val_acc, model, clf)
         if early_stopping.early_stop:
             break
-
-    model = load_best_model(model, node2vec_model_file, device)
-    clf = joblib.load(clf_file)
-    test_acc, test_auc = eval_result_node2vec(model, test_data, clf)
-    print(f'\nTest Accuracy: {test_acc:.4f}, Test AUROC: {test_auc:.4f}')
-    f.write(f'\nTest Accuracy: {test_acc:.4f}, Test AUROC: {test_auc:.4f}\n')
     f.close()
-    save_embed(model, gene_list, args.result_dir)
+
+    model = utils.load_best_model(model, node2vec_model_file, device)
+    clf = joblib.load(clf_file)
+    evaluation.save_node2vec_result(model, [train_data, val_data, test_data], clf, args.result_dir)
+    utils.save_embed(model, gene_list, args.result_dir)
 #     rmfile(node2vec_model_file)
 #     rmfile(clf_file)
 
 def main():
     args = parse_args()
-    save_args(args)
+    utils.save_args(args)
     
     run(args)
 

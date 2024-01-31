@@ -71,11 +71,16 @@ python embed_gene.py --network_file <network.csv> --result_dir <result_dir> \
 - `--sparse`: An option to control the memory efficiency of storing random walks.
 - `--device`: (int) Device number (default: 0).
 
-Check the [script](https://github.com/BonilKoo/TxT/blob/main/embed_gene.py#L15) for other options.
+Check the [script](https://github.com/BonilKoo/TxT/blob/main/embed_gene.py#L14) for other options.
 
 *Output*
 
 - `embedding.csv`: (csv) A csv file representing gene embedding. The gene names are listed in the first column, and the subsequent columns contain the embedding values for each gene in different dimensions.
+- `performance.csv`: (csv) A file containing a summary of the model's performance on training, validation and test datasets, including accuracy and AUROC.
+- `loss.csv`: (csv) A file containing a record of training and validation metrics for each epoch.
+- `arguments.csv`: (csv) A csv file including the argument name and its corresponding value.
+- `node2vec_model.pt`: A file for the trained node2vec model's learned parameters.
+- `link_prediction.joblib`: A file for the trained logistic regression model for link prediction.
 
 ## 2. Training and Evaluation
 
@@ -96,46 +101,49 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/embed_gene.py#L15) 
 
 (2) *Clinical features*
 
-* File type: TSV
+* File type: CSV
 * Format overview:
     - Regression
 
         ```
-        Sample	Age
-        sample1 85
-        sample2 70
-        sample3 30
+        Sample,Age
+        sample1,85
+        sample2,70
+        sample3,50
+        sample4,65
         ...
         ```
 
     - Classification
 
         ```
-        Sample  NHG
-        sample1 2
-        sample2 3
-        sample3 3
-        sample4 1
+        Sample,PAM50
+        sample1,LumA
+        sample2,Basal
+        sample3,LumB
+        sample4,Her2
         ...
         ```
 
     - Survival
 
         ```
-        Sample	OS_duration	OS_event
-        sample1 3313    1
-        sample2 4094    0
-        sample3 4096    0
+        Sample,OS_duration,OS_event
+        sample1,3313,1
+        sample2,4094,0
+        sample3,4096,0
+        sample4,4079,0
         ...
         ```
 
     - Multi-task
 
         ```
-        Sample  Age Size    NHG PAM50   OS_duration OS_event
-        sample1 85  13  2   LumA    3313    1
-        sample2 70  16  3   Basal   4094    0
-        sample3 30  20  3   LumA    4096    0
+        Sample,Age,Size,NHG,PAM50,OS_duration,OS_event
+        sample1,85,13,2,LumA,3313,1
+        sample2,70,16,3,Basal,4094,0
+        sample3,50,15,2,LumB,4096,0
+        sample4,65,15,3,Her2,4079,0
         ...
         ```
 
@@ -156,18 +164,18 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/embed_gene.py#L15) 
 
 Only for multi-task learning
 
-* File type: TSV
+* File type: CSV
 * Format overview:
     - Multi-task
 
         ```
-        name    task
-        Age regression
-        Size    regression
-        NHG classification
-        PAM50   classification
-        OS_duration survival_time
-        OS_event    survival_event
+        name,task
+        Age,regression
+        Size,regression
+        NHG,classification
+        PAM50,classification
+        OS_duration,survival_time
+        OS_event,survival_event
         ```
 
 ### 2) Training
@@ -176,7 +184,7 @@ Only for multi-task learning
 
     ```
     python run_TxT.py --task regression \
-    --input_file <omics_profile.csv> --output_file <clinical_feature.tsv> \
+    --input_file <omics_profile.csv> --output_file <clinical_feature.csv> \
     --embed_file <gene_embedding.csv> --result_dir <resuir_dir> \
     --scaler [MinMax/Standard/None] --device <device> \
     --xavier_uniform --norm_first
@@ -186,7 +194,7 @@ Only for multi-task learning
 
     ```
     python run_TxT.py --task classification \
-    --input_file <omics_profile.csv> --output_file <clinical_feature.tsv> \
+    --input_file <omics_profile.csv> --output_file <clinical_feature.csv> \
     --embed_file <gene_embedding.csv> --result_dir <result_dir> \
     --scaler [MinMax/Standard/None] --device <device> \
     --xavier_uniform --norm_first
@@ -196,7 +204,7 @@ Only for multi-task learning
 
     ```
     python run_TxT.py --task survival \
-    --input_file <omics_profile.csv> --output_file <clinical_feature.tsv> \
+    --input_file <omics_profile.csv> --output_file <clinical_feature.csv> \
     --embed_file <gene_embedding.csv> --result_dir <result_dir> \
     --scaler [MinMax/Standard/None] --device <device> \
     --xavier_uniform --norm_first
@@ -205,8 +213,8 @@ Only for multi-task learning
 * Multi-task
 
     ```
-    python src/run_multi_task.py --task multitask --task_file <task_list.tsv> \
-    --input_file <omics_profile.csv> --output_file <clinical_feature.tsv> \
+    python src/run_multi_task.py --task multitask --task_file <task_list.csv> \
+    --input_file <omics_profile.csv> --output_file <clinical_feature.csv> \
     --embed_file <gene_embedding.csv> --result_dir <result_dir> \
     --scaler [MinMax/Standard/None] --device <device> \
     --xavier_uniform --norm_first
@@ -215,14 +223,14 @@ Only for multi-task learning
 *Options*
 
 - `--input_file`: (csv) A omics profile file representing a gene expression dataset where each row corresponds to a sample, and each column, labeled with gene names, represents the expression level of the corresponding gene in the respective sample. The numerical values in the matrix indicate the expression levels of each gene in the corresponding samples.
-- `--output_file`: (tsv) A file containing clinical feature data. The format is organized with a header line indicating the type of data and subsequent rows containing sample-specific information.
+- `--output_file`: (csv) A file containing clinical feature data. The format is organized with a header line indicating the type of data and subsequent rows containing sample-specific information.
 - `--embed_file`: (csv) A csv file representing gene embedding. The gene names are listed in the first column, and the subsequent columns contain the embedding values for each gene in different dimensions.
 - `--result_dir`: (dir) A directory to save output files.
 - `--scaler`: (str) A data normalization method. You can choose among [MinMax/Standard/None]. The gene expression levels were normalized by using the expression values of the traning set.
 - `--device`: (int) Device number.
 - `--xavier_uniform`: An option to use Xavier Uniform initialization for model weights to prevent issues like vanishing or exploding gradients during the training process.
 - `--norm_first`: An option to perform LayerNorms before other attention and feedforward operations, otherwise after.
-- `--task_file`: (tsv) Only for multi-task learning. A tsv file that outlines a set of tasks. Each row in the file represents a specific task, and the information is organized into two columns: "task name" and "prediction type".
+- `--task_file`: (csv) Only for multi-task learning. A tsv file that outlines a set of tasks. Each row in the file represents a specific task, and the information is organized into two columns: "task name" and "prediction type".
 
 Check the [script](https://github.com/BonilKoo/TxT/blob/main/run_TxT.py#L14) for other options.
 

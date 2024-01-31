@@ -32,7 +32,7 @@ class RegressionDataset(Dataset):
     def __init__(self, input_file, output_file):
         input_df = pd.read_csv(input_file, index_col=0)
         print(f'\nInput file {input_file} is loaded.')
-        output_df = pd.read_table(output_file, index_col=0)
+        output_df = pd.read_csv(output_file, index_col=0)
         print(f'Output file {output_file} is loaded.')
         df = pd.merge(input_df, output_df, left_index=True, right_index=True)
         print(f'\n# of samples = {len(df)}')
@@ -59,7 +59,7 @@ class ClassificationDataset(Dataset):
     def __init__(self, input_file, output_file):
         input_df = pd.read_csv(input_file, index_col=0)
         print(f'\nInput file {input_file} is loaded.')
-        output_df = pd.read_table(output_file, index_col=0)
+        output_df = pd.read_csv(output_file, index_col=0)
         print(f'Output file {output_file} is loaded.')
         df = pd.merge(input_df, output_df, left_index=True, right_index=True)
         print(f'\n# of samples = {len(df)}')
@@ -93,7 +93,7 @@ class SurvivalDataset(Dataset):
     def __init__(self, input_file, output_file, n_time_intervals, is_min_time_zero=True, extra_pct_time=0.1):
         input_df = pd.read_csv(input_file, index_col=0)
         print(f'\nInput file {input_file} is loaded.')
-        output_df = pd.read_table(output_file, index_col=0)
+        output_df = pd.read_csv(output_file, index_col=0)
         print(f'Output file {output_file} is loaded.')
         df = pd.merge(input_df, output_df, left_index=True, right_index=True)
         print(f'\n# of samples = {len(df)}')
@@ -167,10 +167,10 @@ class MultitaskDataset(Dataset):
     def __init__(self, input_file, output_file, task_file, n_time_intervals, is_min_time_zero=True, extra_pct_time=0.1):
         input_df = pd.read_csv(input_file, index_col=0)
         print(f'\nInput file {input_file} is loaded.')
-        output_df = pd.read_table(output_file, index_col=0)
+        output_df = pd.read_csv(output_file, index_col=0)
         print(f'Output file {output_file} is loaded.')
 
-        task_df = pd.read_table(task_file)
+        task_df = pd.read_csv(task_file)
         print(f'Task file {task_file} is loaded.')
         task_df_regression = task_df[task_df['task'] == 'regression']
         task_df_classification = task_df[task_df['task'] == 'classification']
