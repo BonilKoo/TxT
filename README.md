@@ -40,7 +40,7 @@ The embedding for each gene, used as input for training, is derived from a pre-t
 
 You can use other methods according to your need.
 
-### 1) Input data
+### 1) Input Data
 
 (1) *Network*
 
@@ -56,7 +56,7 @@ You can use other methods according to your need.
     ...
     ```
 
-### 2) Training
+### 2) Embedding Gene
 
 ```
 python embed_gene.py --network_file <network.csv> --result_dir <result_dir> \
@@ -82,9 +82,9 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/embed_gene.py#L14) 
 - `node2vec_model.pt`: A file for the trained node2vec model's learned parameters.
 - `link_prediction.joblib`: A file for the trained logistic regression model for link prediction.
 
-## 2. Training and Evaluation
+## 2. Running TxT (Training and Evaluation)
 
-### 1) Input data
+### 1) Input Data
 
 (1) *Omics profile*
 
@@ -162,7 +162,7 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/embed_gene.py#L14) 
 
 (4) *Task list*
 
-Only for multi-task learning
+Only required for multi-task learning
 
 * File type: CSV
 * Format overview:
@@ -178,7 +178,7 @@ Only for multi-task learning
         OS_event,survival_event
         ```
 
-### 2) Training
+### 2) Running
 
 * Regression
 
