@@ -6,14 +6,12 @@ from models.embed import *
 from models.layers import EncoderLayer, TaskSpecificLayer
 
 class Encoder(nn.Module):
-    def __init__(self, embed_file, gene_list, device,
+    def __init__(self, embed_file, gene_list,
                  n_heads=8, d_model=512, dropout=0.1, d_ff=2048, norm_first=False, n_layers=6):
         super(Encoder, self).__init__()
         
         self.embed = Embedder(embed_file, gene_list)
         self.d_embed = self.embed.embed.embedding_dim
-        
-        self.device = device
         
         self.TUPE_A = TUPE_A(n_heads, d_model)
         
@@ -26,7 +24,7 @@ class Encoder(nn.Module):
         batch_size = x.size(0)
         n_genes = x.size(1)
         
-        e = torch.arange(n_genes, device=self.device).repeat(batch_size).view(batch_size, -1)
+        e = torch.arange(n_genes, device=x.get_device()).repeat(batch_size).view(batch_size, -1)
         # e: (n_genes) => (n_genes * batch_size) => (batch_size, n_genes)
         
         e = self.embed(e)
@@ -42,11 +40,11 @@ class Encoder(nn.Module):
         return self.layer_norm(e)
 
 class Transformer(nn.Module):
-    def __init__(self, embed_file, gene_list, device,
+    def __init__(self, embed_file, gene_list,
                  n_heads=8, d_model=512, dropout=0.1, d_ff=2048, norm_first=False, n_layers=6):
         super(Transformer, self).__init__()
         
-        self.encoder = Encoder(embed_file, gene_list, device,
+        self.encoder = Encoder(embed_file, gene_list,
                                n_heads, d_model, dropout, d_ff, norm_first, n_layers)
     
     def encode(self, x, mask=None):
@@ -66,12 +64,12 @@ class Transformer(nn.Module):
         return e_outputs
 
 class TxT(nn.Module):
-    def __init__(self, embed_file, gene_list, device,
+    def __init__(self, embed_file, gene_list,
                  n_heads=8, d_model=512, dropout=0.1, d_ff=2048, norm_first=False, n_layers=6,
                  aggfunc='Flatten', d_hidden1=128, d_hidden2=64, slope=0.2, d_output_dict=None):
         super(TxT, self).__init__()
 
-        self.transformer = Transformer(embed_file, gene_list, device,
+        self.transformer = Transformer(embed_file, gene_list,
                                        n_heads, d_model, dropout, d_ff, norm_first, n_layers)
 
         self.d_embed = self.transformer.encoder.d_embed

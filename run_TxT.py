@@ -73,7 +73,7 @@ def run(args):
     else:
         flag_survival = 0
     
-    model = TxT(args.embed_file, gene_list, device,
+    model = TxT(args.embed_file, gene_list,
                         args.n_heads, args.d_model, args.dropout, args.d_ff, args.norm_first, args.n_layers,
                         args.aggfunc, args.d_hidden1, args.d_hidden2, args.slope, d_output_dict).to(device)
     if args.xavier_uniform:
@@ -102,19 +102,14 @@ def run(args):
     def train():
         model.train()
         total_loss = 0
-#         for x, y, T, E in train_dataloader:
         for x, *y_list, T, E in train_dataloader:
             x = x.to(device)
-#             y = y.to(device)
             y_list = [y.to(device) for y in y_list]
             
-#             output = model(x)[0]
             outputs = model(x)
             if args.task in ['regression', 'classification']:
-#                 loss = criterion(output, y)
                 loss = criterion(outputs[0], y_list[0])
             elif args.task == 'survival':
-#                 loss = SurvivalLoss(output, y, E, Triangle) # survival
                 loss = SurvivalLoss(outputs[0], y_list[0], E, Triangle) # survival
             elif args.task == 'multitask':
                 loss_list = PCGrad_backward(optimizer, outputs, y_list, n_tasks, idx_task_dict, flag_survival, E, Triangle, device, False) # PCGrad
@@ -134,19 +129,14 @@ def run(args):
     def test():
         model.eval()
         total_loss = 0
-#         for x, y, T, E in val_dataloader:
         for x, *y_list, T, E in val_dataloader:
             x = x.to(device)
-#             y = y.to(device)
             y_list = [y.to(device) for y in y_list]
             
-#             output = model(x)[0]
             outputs = model(x)
             if args.task in ['regression', 'classification']:
-#                 loss = criterion(output, y)
                 loss = criterion(outputs[0], y_list[0])
             elif args.task == 'survival':
-#                 loss = SurvivalLoss(output, y, E, Triangle) # survival
                 loss = SurvivalLoss(outputs[0], y_list[0], E, Triangle) # survival
             elif args.task == 'multitask':
                 loss_list = PCGrad_backward(optimizer, outputs, y_list, n_tasks, idx_task_dict, flag_survival, E, Triangle, device, True) # PCGrad
