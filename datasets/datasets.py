@@ -343,7 +343,7 @@ def load_dataset(input_file, output_file, task, val_ratio=0.1, test_ratio=0.2, s
     elif scaler == 'Standard':
         scaler = StandardScaler()
     
-    if scaler is not None:
+    if scaler != 'None':
         train_X_scaled = scaler.fit_transform(dataset.x[train_dataset.indices])
         val_X_scaled = scaler.transform(dataset.x[val_dataset.indices])
         test_X_scaled = scaler.transform(dataset.x[test_dataset.indices])

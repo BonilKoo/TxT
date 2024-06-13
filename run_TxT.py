@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=42, help='(int) Seed for random number generation, ensuring reproducibility of results. (default: 42)')
     parser.add_argument('--val_ratio', type=float, default=0.1, help='(float) Ratio of data to use for validation. (default: 0.1)')
     parser.add_argument('--test_ratio', type=float, default=0.2, help='(float) Ratio of data to use for testing. (default: 0.2)')
-    parser.add_argument('--scaler', choices=[None, 'MinMax', 'Standard'], default='MinMax', help='(str) A data normalization method. Choose among [MinMax/Standard/None]. The gene expression levels were normalized by using the expression values of the traning set. (default: MinMax)')
+    parser.add_argument('--scaler', choices=['None', 'MinMax', 'Standard'], default='MinMax', help='(str) A data normalization method. Choose among [MinMax/Standard/None]. The gene expression levels were normalized by using the expression values of the traning set. (default: MinMax)')
     parser.add_argument('--batch_size', type=int, default=64, help='(int) Batch size for training, validation, and test sets. (default: 64)')
     parser.add_argument('--n_time_intervals', type=int, default=64, help='(int) Number of time intervals for survival prediction. (default: 64)') # survival
     
