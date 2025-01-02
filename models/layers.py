@@ -130,7 +130,7 @@ class TaskSpecificLayer(nn.Module):
         if aggfunc == 'Flatten':
             self.linear_1 = nn.Linear(n_genes*d_embed, d_hidden1) # (1)
         else:
-            self.linear_1 = nn.Linear(n_genes, d_hidden1) # (2)
+            self.linear_1 = nn.Linear(d_embed, d_hidden1) # (2)
 
         self.batch_norm_1 = nn.BatchNorm1d(d_hidden1)
         self.activation_1 = nn.LeakyReLU(slope, inplace=True)
