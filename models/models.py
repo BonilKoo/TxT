@@ -95,8 +95,9 @@ class TxT(nn.Module):
             x = self.dropout(self.flatten(x))
             # x: (batch_size, n_genes*d_embed)
         else:
+            x = x.permute(0, 2, 1)
             x = self.pooling(x).squeeze(-1)
-        # x: (batch_size, n_genes)
+        # x: (batch_size, d_embed)
 
         outputs = [layer(x) for layer in self.task_specific_layers]
 
