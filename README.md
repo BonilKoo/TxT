@@ -242,3 +242,6 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/run_TxT.py#L14) for
 - `loss.csv`: (csv) A file containing a record of training and validation loss for each epoch.
 - `arguments.csv`: (csv) A csv file including the argument name and its corresponding value.
 - `TxT.pt`: A file for the trained model's learned parameters.
+
+### 
+Example input data files and the code used in our case studies is available at https://doi.org/10.6084/m9.figshare.30102199.v1.
