@@ -244,6 +244,6 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/run_TxT.py#L14) for
 - `TxT.pt`: A file for the trained model's learned parameters.
 
 ### Examples
-Example input data files and the code used in our case studies is available at https://doi.org/10.6084/m9.figshare.30102199.v1.
+Example input data files and the code used in our case studies is available at https://doi.org/10.6084/m9.figshare.30102199.v2.
 
 The full collection of model weights is available upon reasonable request.
