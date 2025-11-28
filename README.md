@@ -243,6 +243,24 @@ Check the [script](https://github.com/BonilKoo/TxT/blob/main/run_TxT.py#L14) for
 - `arguments.csv`: (csv) A csv file including the argument name and its corresponding value.
 - `TxT.pt`: A file for the trained model's learned parameters.
 
+---
+
+## Citation
+```
+@article{koo2025transcriptome,
+  title={Transcriptome Transformer: improving patient survival prediction via multitask learning of transcriptomic and clinical features},
+  author={Koo, Bonil and Sung, Inyoung and Lee, Sangseon and Kim, Sun},
+  journal={Briefings in Bioinformatics},
+  volume={26},
+  number={6},
+  pages={bbaf628},
+  year={2025},
+  publisher={Oxford University Press}
+}
+```
+
+---
+
 ### Examples
 Example input data files and the code used in our case studies is available at https://doi.org/10.6084/m9.figshare.30102199.v2.
 
